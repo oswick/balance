@@ -143,10 +143,12 @@ export default function PurchasesPage() {
   }
 
   const deletePurchase = async (purchase: Purchase) => {
+    if(!user) return;
     const { error } = await supabase.rpc('delete_purchase', {
         p_purchase_id: purchase.id,
         p_product_id: purchase.product_id,
-        p_quantity: purchase.quantity
+        p_quantity: purchase.quantity,
+        p_user_id: user.id
     });
     
     if (error) {
@@ -211,7 +213,10 @@ export default function PurchasesPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Product</FormLabel>
-                      <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={field.value.toString()} value={field.value.toString()} >
+                      <Select 
+                        onValueChange={(value) => field.onChange(Number(value))} 
+                        defaultValue={field.value.toString()}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a product" />
@@ -229,7 +234,10 @@ export default function PurchasesPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Supplier</FormLabel>
-                      <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={field.value.toString()} value={field.value.toString()}>
+                      <Select 
+                        onValueChange={(value) => field.onChange(Number(value))} 
+                        defaultValue={field.value.toString()}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a supplier" />

@@ -170,10 +170,12 @@ export default function SalesPage() {
   }
   
   async function deleteSale(sale: Sale) {
+    if(!user) return;
     const { error } = await supabase.rpc('delete_sale', {
         p_sale_id: sale.id,
         p_product_id: sale.product_id,
-        p_quantity: sale.quantity
+        p_quantity: sale.quantity,
+        p_user_id: user.id,
     });
 
     if (error) {
@@ -264,7 +266,6 @@ export default function SalesPage() {
                       <Select
                         onValueChange={(value) => field.onChange(Number(value))}
                         defaultValue={field.value.toString()}
-                        value={field.value.toString()}
                       >
                         <FormControl>
                           <SelectTrigger>
