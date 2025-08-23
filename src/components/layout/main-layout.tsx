@@ -1,22 +1,10 @@
+
 "use client";
 
 import { SidebarProvider, Sidebar, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarNav } from "./sidebar-nav";
-import { useAuth } from "@/context/auth-provider";
-import { usePathname } from "next/navigation";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
-  const pathname = usePathname();
-
-  if (!user && pathname !== '/login') {
-    return null; // Or a loading spinner
-  }
-  
-  if (pathname === '/login') {
-    return <>{children}</>
-  }
-
   return (
     <SidebarProvider>
       <Sidebar side="left" variant="sidebar" collapsible="icon">
