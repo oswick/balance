@@ -17,6 +17,7 @@ export default function Home() {
   const fetchDashboardData = useCallback(async () => {
     if (!user) return;
 
+    // Fetch Sales
     const { data: salesData, error: salesError } = await supabase
       .from('sales')
       .select('amount')
@@ -28,6 +29,7 @@ export default function Home() {
       setTotalSales(salesData.reduce((acc, sale) => acc + sale.amount, 0));
     }
 
+    // Fetch Expenses and Purchases
     const { data: expensesData, error: expensesError } = await supabase
       .from('expenses')
       .select('amount')
@@ -35,9 +37,22 @@ export default function Home() {
 
     if (expensesError) {
       toast({ title: t('errors.fetchExpenses'), description: expensesError.message, variant: 'destructive' });
-    } else {
-      setTotalExpenses(expensesData.reduce((acc, expense) => acc + expense.amount, 0));
     }
+    
+    const { data: purchasesData, error: purchasesError } = await supabase
+      .from('purchases')
+      .select('total_cost')
+      .eq('user_id', user.id);
+
+    if (purchasesError) {
+        toast({ title: t('errors.fetchPurchases'), description: purchasesError.message, variant: 'destructive' });
+    }
+    
+    const regularExpenses = expensesData?.reduce((acc, expense) => acc + expense.amount, 0) || 0;
+    const purchaseExpenses = purchasesData?.reduce((acc, purchase) => acc + purchase.total_cost, 0) || 0;
+    
+    setTotalExpenses(regularExpenses + purchaseExpenses);
+
   }, [supabase, user, toast, t]);
 
   useEffect(() => {
