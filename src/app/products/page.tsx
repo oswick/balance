@@ -389,5 +389,4 @@ export default function ProductsPage() {
       </Dialog>
     </main>
   );
-
-    
+}
