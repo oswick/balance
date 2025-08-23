@@ -22,14 +22,15 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
 export default function LoginPage() {
   const { supabase } = useAuth();
 
-  const handleGoogleLogin = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: location.origin + '/auth/callback',
-      },
-    });
-  };
+// src/app/login/page.tsx
+const handleGoogleLogin = async () => {
+  await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback`,
+    },
+  });
+};
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background p-24">
