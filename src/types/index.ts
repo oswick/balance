@@ -1,8 +1,9 @@
+// src/types/index.ts - Updated to match database schema
 
 export interface Sale {
-  id: number;
+  id: string; // Changed from number to string (UUID)
   date: string;
-  product_id: number;
+  product_id: string; // Changed from number to string (UUID)
   product_name?: string; // This might come from a join
   quantity: number;
   amount: number;
@@ -11,7 +12,7 @@ export interface Sale {
 }
 
 export interface Expense {
-  id: number;
+  id: string; // Changed from number to string (UUID)
   date: string;
   category: string;
   description: string;
@@ -21,7 +22,7 @@ export interface Expense {
 }
 
 export interface Product {
-  id: number;
+  id: string; // Changed from number to string (UUID)
   name: string;
   purchase_price: number;
   selling_price: number;
@@ -31,24 +32,23 @@ export interface Product {
 }
 
 export interface Purchase {
-  id: number;
+  id: string; // Changed from number to string (UUID)
   date: string;
-  product_id: number;
+  product_id: string; // Changed from number to string (UUID)
   product_name?: string; // from join
   quantity: number;
   total_cost: number;
-  supplier_id: number;
+  supplier_id: string; // Changed from number to string (UUID)
   supplier_name?: string; // from join
   user_id: string;
   created_at: string;
 }
 
 export interface Supplier {
-  id: number;
+  id: string; // Changed from number to string (UUID)
   name: string;
   product_types: string;
   purchase_days: string;
   user_id: string;
   created_at: string;
 }
-

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -46,11 +45,12 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-provider";
 
+// Updated schema - product_id is now a string
 const salesSchema = z.object({
   date: z.date({
     required_error: "A date is required.",
   }),
-  product_id: z.coerce.number().min(1, "Please select a product."),
+  product_id: z.string().min(1, "Please select a product."), // Changed from z.coerce.number()
   quantity: z.coerce.number().min(1, "Quantity must be at least 1."),
 });
 
@@ -94,18 +94,18 @@ export default function SalesPage() {
     }
   }, [supabase, user, toast]);
 
-
   useEffect(() => {
     fetchSales();
     fetchProducts();
   }, [fetchSales, fetchProducts]);
 
+  // Updated form with correct default values
   const form = useForm<z.infer<typeof salesSchema>>({
     resolver: zodResolver(salesSchema),
     defaultValues: {
       date: new Date(),
       quantity: 1,
-      product_id: 0,
+      product_id: "", // Changed from 0 to empty string
     },
   });
 
@@ -157,11 +157,10 @@ export default function SalesPage() {
       toast({
         title: "Success!",
         description: "Daily sale has been added.",
-        variant: "success"
       });
       form.reset({
         date: new Date(),
-        product_id: 0,
+        product_id: "", // Reset to empty string
         quantity: 1,
       });
       fetchSales();
@@ -264,8 +263,8 @@ export default function SalesPage() {
                     <FormItem>
                       <FormLabel>Product</FormLabel>
                       <Select
-                        onValueChange={(value) => field.onChange(Number(value))}
-                        defaultValue={field.value.toString()}
+                        onValueChange={field.onChange}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -274,7 +273,7 @@ export default function SalesPage() {
                         </FormControl>
                         <SelectContent>
                           {products.map((p) => (
-                            <SelectItem key={p.id} value={p.id.toString()}>
+                            <SelectItem key={p.id} value={p.id}>
                               {p.name} (Stock: {p.quantity})
                             </SelectItem>
                           ))}
