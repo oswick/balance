@@ -1,16 +1,50 @@
+
 "use client";
 
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Sale, Expense } from "@/types";
 import { DollarSign, Receipt, TrendingUp, Wallet } from "lucide-react";
+import { useAuth } from "@/context/auth-provider";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
-  const [sales] = useLocalStorage<Sale[]>("sales", []);
-  const [expenses] = useLocalStorage<Expense[]>("expenses", []);
+  const { supabase, user } = useAuth();
+  const { toast } = useToast();
+  const [totalSales, setTotalSales] = useState(0);
+  const [totalExpenses, setTotalExpenses] = useState(0);
 
-  const totalSales = sales.reduce((acc, sale) => acc + sale.amount, 0);
-  const totalExpenses = expenses.reduce((acc, expense) => acc + expense.amount, 0);
+  const fetchDashboardData = React.useCallback(async () => {
+    if (!user) return;
+
+    const { data: salesData, error: salesError } = await supabase
+      .from('sales')
+      .select('amount')
+      .eq('user_id', user.id);
+
+    if (salesError) {
+      toast({ title: "Error fetching sales", description: salesError.message, variant: 'destructive' });
+    } else {
+      setTotalSales(salesData.reduce((acc, sale) => acc + sale.amount, 0));
+    }
+
+    const { data: expensesData, error: expensesError } = await supabase
+      .from('expenses')
+      .select('amount')
+      .eq('user_id', user.id);
+
+    if (expensesError) {
+      toast({ title: "Error fetching expenses", description: expensesError.message, variant: 'destructive' });
+    } else {
+      setTotalExpenses(expensesData.reduce((acc, expense) => acc + expense.amount, 0));
+    }
+  }, [supabase, user, toast]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+
   const profit = totalSales - totalExpenses;
 
   const formatCurrency = (amount: number) => {
@@ -100,3 +134,4 @@ export default function Home() {
     </div>
   );
 }
+

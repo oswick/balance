@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -5,8 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, PlusCircle, Trash2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
 
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Purchase, Product, Supplier } from "@/types";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/page-header";
@@ -43,20 +44,67 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/auth-provider";
 
 const purchaseSchema = z.object({
   date: z.date({ required_error: "A date is required." }),
-  productId: z.string().min(1, "Please select a product."),
-  supplierId: z.string().min(1, "Please select a supplier."),
+  product_id: z.coerce.number().min(1, "Please select a product."),
+  supplier_id: z.coerce.number().min(1, "Please select a supplier."),
   quantity: z.coerce.number().min(1, "Quantity must be at least 1."),
-  totalCost: z.coerce.number().min(0.01, "Total cost must be greater than 0."),
+  total_cost: z.coerce.number().min(0.01, "Total cost must be greater than 0."),
 });
 
 export default function PurchasesPage() {
-  const [purchases, setPurchases] = useLocalStorage<Purchase[]>("purchases", []);
-  const [products] = useLocalStorage<Product[]>("products", []);
-  const [suppliers] = useLocalStorage<Supplier[]>("suppliers", []);
+  const { supabase, user } = useAuth();
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const { toast } = useToast();
+  
+  const fetchPurchases = React.useCallback(async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('purchases')
+      .select(`
+        *,
+        products ( name ),
+        suppliers ( name )
+      `)
+      .eq('user_id', user.id)
+      .order('date', { ascending: false });
+
+    if (error) {
+      toast({ title: "Error fetching purchases", description: error.message, variant: "destructive" });
+    } else {
+      const formattedData = data.map((d: any) => ({ 
+        ...d, 
+        product_name: d.products.name,
+        supplier_name: d.suppliers.name,
+      }));
+      setPurchases(formattedData as Purchase[]);
+    }
+  }, [supabase, user, toast]);
+
+  const fetchProducts = React.useCallback(async () => {
+    if (!user) return;
+    const { data, error } = await supabase.from('products').select('*').eq('user_id', user.id);
+    if(error) toast({ title: "Error fetching products", description: error.message, variant: "destructive" });
+    else setProducts(data as Product[]);
+  }, [supabase, user, toast]);
+
+  const fetchSuppliers = React.useCallback(async () => {
+    if (!user) return;
+    const { data, error } = await supabase.from('suppliers').select('*').eq('user_id', user.id);
+    if(error) toast({ title: "Error fetching suppliers", description: error.message, variant: "destructive" });
+    else setSuppliers(data as Supplier[]);
+  }, [supabase, user, toast]);
+
+  useEffect(() => {
+    fetchPurchases();
+    fetchProducts();
+    fetchSuppliers();
+  }, [fetchPurchases, fetchProducts, fetchSuppliers]);
+
 
   const form = useForm<z.infer<typeof purchaseSchema>>({
     resolver: zodResolver(purchaseSchema),
@@ -66,40 +114,52 @@ export default function PurchasesPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof purchaseSchema>) {
-    const product = products.find(p => p.id === values.productId);
-    const supplier = suppliers.find(s => s.id === values.supplierId);
+  async function onSubmit(values: z.infer<typeof purchaseSchema>) {
+    if (!user) return;
 
-    if (!product || !supplier) {
-      toast({ title: "Error", description: "Selected product or supplier not found.", variant: "destructive" });
+    const { error } = await supabase.rpc('record_purchase', {
+        p_product_id: values.product_id,
+        p_supplier_id: values.supplier_id,
+        p_quantity: values.quantity,
+        p_total_cost: values.total_cost,
+        p_date: values.date.toISOString(),
+        p_user_id: user.id
+    });
+
+    if (error) {
+      toast({ title: "Error logging purchase", description: error.message, variant: "destructive" });
       return;
     }
 
-    const newPurchase: Purchase = {
-      id: new Date().toISOString(),
-      date: values.date.toISOString(),
-      productId: values.productId,
-      productName: product.name,
-      supplierId: values.supplierId,
-      supplierName: supplier.name,
-      quantity: values.quantity,
-      totalCost: values.totalCost,
-    };
-    setPurchases([newPurchase, ...purchases]);
     toast({
       title: "Success!",
       description: "Product purchase has been logged.",
     });
-    form.reset({ date: new Date(), quantity: 1 });
+    form.reset({ date: new Date(), quantity: 1, product_id: 0, supplier_id: 0, total_cost: 0 });
+    fetchPurchases();
   }
 
-  const deletePurchase = (id: string) => {
-    setPurchases(purchases.filter(p => p.id !== id));
-    toast({
-      title: "Purchase Deleted",
-      description: "The purchase record has been removed.",
-      variant: "destructive",
+  const deletePurchase = async (purchase: Purchase) => {
+    const { error } = await supabase.rpc('delete_purchase', {
+        p_purchase_id: purchase.id,
+        p_product_id: purchase.product_id,
+        p_quantity: purchase.quantity
     });
+    
+    if (error) {
+       toast({
+        title: "Purchase Deletion Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Purchase Deleted",
+        description: "The purchase record has been removed.",
+        variant: "destructive",
+      });
+      fetchPurchases();
+    }
   }
 
   const formatCurrency = (amount: number) => {
@@ -144,36 +204,36 @@ export default function PurchasesPage() {
                     </FormItem>
                   )}
                 />
-                <FormField control={form.control} name="productId"
+                <FormField control={form.control} name="product_id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Product</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={(value) => field.onChange(parseInt(value))} >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a product" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {products.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                          {products.map(p => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <FormField control={form.control} name="supplierId"
+                <FormField control={form.control} name="supplier_id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Supplier</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={(value) => field.onChange(parseInt(value))}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a supplier" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                          {suppliers.map(s => <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -191,7 +251,7 @@ export default function PurchasesPage() {
                     </FormItem>
                   )}
                 />
-                <FormField control={form.control} name="totalCost"
+                <FormField control={form.control} name="total_cost"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Total Cost</FormLabel>
@@ -227,12 +287,12 @@ export default function PurchasesPage() {
                     purchases.map((purchase) => (
                       <TableRow key={purchase.id}>
                         <TableCell>{format(new Date(purchase.date), "PPP")}</TableCell>
-                        <TableCell className="font-medium">{purchase.productName}</TableCell>
-                        <TableCell>{purchase.supplierName}</TableCell>
+                        <TableCell className="font-medium">{purchase.product_name}</TableCell>
+                        <TableCell>{purchase.supplier_name}</TableCell>
                         <TableCell>{purchase.quantity}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(purchase.totalCost)}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(purchase.total_cost)}</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => deletePurchase(purchase.id)}>
+                          <Button variant="ghost" size="icon" onClick={() => deletePurchase(purchase)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </TableCell>
@@ -252,3 +312,4 @@ export default function PurchasesPage() {
     </main>
   );
 }
+

@@ -1,11 +1,13 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { PlusCircle, Trash2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
 
-import { useLocalStorage } from "@/hooks/use-local-storage";
+
 import { Supplier } from "@/types";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -28,46 +30,77 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/auth-provider";
 
 const supplierSchema = z.object({
   name: z.string().min(1, "Supplier name is required."),
-  productTypes: z.string().min(1, "Product types are required."),
-  purchaseDays: z.string().min(1, "Purchase days are required."),
+  product_types: z.string().min(1, "Product types are required."),
+  purchase_days: z.string().min(1, "Purchase days are required."),
 });
 
 export default function SuppliersPage() {
-  const [suppliers, setSuppliers] = useLocalStorage<Supplier[]>("suppliers", []);
+  const { supabase, user } = useAuth();
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const { toast } = useToast();
+
+  const fetchSuppliers = React.useCallback(async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('suppliers')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      toast({ title: "Error fetching suppliers", description: error.message, variant: "destructive" });
+    } else {
+      setSuppliers(data as Supplier[]);
+    }
+  }, [supabase, user, toast]);
+
+  useEffect(() => {
+    fetchSuppliers();
+  }, [fetchSuppliers]);
 
   const form = useForm<z.infer<typeof supplierSchema>>({
     resolver: zodResolver(supplierSchema),
     defaultValues: {
       name: "",
-      productTypes: "",
-      purchaseDays: "",
+      product_types: "",
+      purchase_days: "",
     },
   });
 
-  function onSubmit(values: z.infer<typeof supplierSchema>) {
-    const newSupplier: Supplier = {
-      id: new Date().toISOString(),
-      ...values,
-    };
-    setSuppliers([newSupplier, ...suppliers]);
-    toast({
-      title: "Success!",
-      description: "Supplier has been added.",
-    });
-    form.reset();
+  async function onSubmit(values: z.infer<typeof supplierSchema>) {
+    if (!user) return;
+    const newSupplier = { ...values, user_id: user.id };
+    
+    const { error } = await supabase.from('suppliers').insert([newSupplier]);
+
+    if(error){
+      toast({ title: "Error adding supplier", description: error.message, variant: "destructive" });
+    } else {
+      toast({
+        title: "Success!",
+        description: "Supplier has been added.",
+      });
+      form.reset();
+      fetchSuppliers();
+    }
   }
   
-  const deleteSupplier = (id: string) => {
-    setSuppliers(suppliers.filter(s => s.id !== id));
-    toast({
-      title: "Supplier Deleted",
-      description: "The supplier record has been removed.",
-      variant: "destructive",
-    })
+  const deleteSupplier = async (id: number) => {
+    const { error } = await supabase.from('suppliers').delete().eq('id', id);
+    if(error){
+      toast({ title: "Error deleting supplier", description: error.message, variant: "destructive" });
+    } else {
+      toast({
+        title: "Supplier Deleted",
+        description: "The supplier record has been removed.",
+        variant: "destructive",
+      })
+      fetchSuppliers();
+    }
   }
 
   return (
@@ -102,7 +135,7 @@ export default function SuppliersPage() {
                 />
                 <FormField
                   control={form.control}
-                  name="productTypes"
+                  name="product_types"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Product Types</FormLabel>
@@ -115,7 +148,7 @@ export default function SuppliersPage() {
                 />
                 <FormField
                   control={form.control}
-                  name="purchaseDays"
+                  name="purchase_days"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Purchase Days</FormLabel>
@@ -153,8 +186,8 @@ export default function SuppliersPage() {
                     suppliers.map((supplier) => (
                       <TableRow key={supplier.id}>
                         <TableCell className="font-medium">{supplier.name}</TableCell>
-                        <TableCell>{supplier.productTypes}</TableCell>
-                        <TableCell>{supplier.purchaseDays}</TableCell>
+                        <TableCell>{supplier.product_types}</TableCell>
+                        <TableCell>{supplier.purchase_days}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" onClick={() => deleteSupplier(supplier.id)}>
                             <Trash2 className="h-4 w-4 text-destructive" />

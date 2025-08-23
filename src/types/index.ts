@@ -1,43 +1,54 @@
 
 export interface Sale {
-  id: string;
+  id: number;
   date: string;
-  productId: string;
-  productName: string;
+  product_id: number;
+  product_name?: string; // This might come from a join
   quantity: number;
   amount: number;
+  user_id: string;
+  created_at: string;
 }
 
 export interface Expense {
-  id: string;
+  id: number;
   date: string;
   category: string;
   description: string;
   amount: number;
+  user_id: string;
+  created_at: string;
 }
 
 export interface Product {
-  id: string;
+  id: number;
   name: string;
-  purchasePrice: number;
-  sellingPrice: number;
+  purchase_price: number;
+  selling_price: number;
   quantity: number;
+  user_id: string;
+  created_at: string;
 }
 
 export interface Purchase {
-  id:string;
+  id: number;
   date: string;
-  productId: string;
-  productName: string;
+  product_id: number;
+  product_name?: string; // from join
   quantity: number;
-  totalCost: number;
-  supplierId: string;
-  supplierName: string;
+  total_cost: number;
+  supplier_id: number;
+  supplier_name?: string; // from join
+  user_id: string;
+  created_at: string;
 }
 
 export interface Supplier {
-  id: string;
+  id: number;
   name: string;
-  productTypes: string;
-  purchaseDays: string;
+  product_types: string;
+  purchase_days: string;
+  user_id: string;
+  created_at: string;
 }
+

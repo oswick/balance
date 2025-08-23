@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -5,8 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, PlusCircle, Trash2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
 
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Expense } from "@/types";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/page-header";
@@ -36,6 +37,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/auth-provider";
 
 const expenseSchema = z.object({
   date: z.date({
@@ -47,8 +49,28 @@ const expenseSchema = z.object({
 });
 
 export default function ExpensesPage() {
-  const [expenses, setExpenses] = useLocalStorage<Expense[]>("expenses", []);
+  const { supabase, user } = useAuth();
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const { toast } = useToast();
+
+  const fetchExpenses = React.useCallback(async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('expenses')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('date', { ascending: false });
+
+    if (error) {
+      toast({ title: "Error fetching expenses", description: error.message, variant: "destructive" });
+    } else {
+      setExpenses(data as Expense[]);
+    }
+  }, [supabase, user, toast]);
+
+  useEffect(() => {
+    fetchExpenses();
+  }, [fetchExpenses]);
 
   const form = useForm<z.infer<typeof expenseSchema>>({
     resolver: zodResolver(expenseSchema),
@@ -60,32 +82,50 @@ export default function ExpensesPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof expenseSchema>) {
-    const newExpense: Expense = {
-      id: new Date().toISOString(),
-      date: values.date.toISOString(),
+  async function onSubmit(values: z.infer<typeof expenseSchema>) {
+    if (!user) return;
+
+    const newExpense = {
       ...values,
+      date: values.date.toISOString(),
+      user_id: user.id,
     };
-    setExpenses([newExpense, ...expenses]);
-    toast({
-      title: "Success!",
-      description: "Expense has been added.",
-    });
-    form.reset({
-      date: new Date(),
-      category: "",
-      description: "",
-      amount: 0,
-    });
+    
+    const { error } = await supabase.from('expenses').insert([newExpense]);
+    
+    if (error) {
+      toast({ title: "Error adding expense", description: error.message, variant: "destructive" });
+    } else {
+      toast({
+        title: "Success!",
+        description: "Expense has been added.",
+      });
+      form.reset({
+        date: new Date(),
+        category: "",
+        description: "",
+        amount: 0,
+      });
+      fetchExpenses();
+    }
   }
   
-  const deleteExpense = (id: string) => {
-    setExpenses(expenses.filter(exp => exp.id !== id));
-     toast({
-      title: "Expense Deleted",
-      description: "The expense record has been removed.",
-      variant: "destructive",
-    })
+  const deleteExpense = async (id: number) => {
+    const { error } = await supabase.from('expenses').delete().eq('id', id);
+    if(error) {
+       toast({
+        title: "Error Deleting Expense",
+        description: error.message,
+        variant: "destructive",
+      })
+    } else {
+      toast({
+        title: "Expense Deleted",
+        description: "The expense record has been removed.",
+        variant: "destructive",
+      })
+      fetchExpenses();
+    }
   }
 
   const formatCurrency = (amount: number) => {
@@ -248,3 +288,4 @@ export default function ExpensesPage() {
     </main>
   );
 }
+

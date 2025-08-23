@@ -6,8 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, PlusCircle, Trash2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
 
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Sale, Product } from "@/types";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/page-header";
@@ -44,19 +44,61 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/auth-provider";
 
 const salesSchema = z.object({
   date: z.date({
     required_error: "A date is required.",
   }),
-  productId: z.string().min(1, "Please select a product."),
+  product_id: z.coerce.number().min(1, "Please select a product."),
   quantity: z.coerce.number().min(1, "Quantity must be at least 1."),
 });
 
 export default function SalesPage() {
-  const [sales, setSales] = useLocalStorage<Sale[]>("sales", []);
-  const [products, setProducts] = useLocalStorage<Product[]>("products", []);
+  const { supabase, user } = useAuth();
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const { toast } = useToast();
+
+  const fetchSales = React.useCallback(async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('sales')
+      .select(`
+        *,
+        products ( name )
+      `)
+      .eq('user_id', user.id)
+      .order('date', { ascending: false });
+
+    if (error) {
+      toast({ title: "Error fetching sales", description: error.message, variant: "destructive" });
+    } else {
+      const formattedData = data.map((d: any) => ({ ...d, product_name: d.products.name }));
+      setSales(formattedData as Sale[]);
+    }
+  }, [supabase, user, toast]);
+
+  const fetchProducts = React.useCallback(async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('name', { ascending: true });
+
+    if (error) {
+      toast({ title: "Error fetching products", description: error.message, variant: "destructive" });
+    } else {
+      setProducts(data as Product[]);
+    }
+  }, [supabase, user, toast]);
+
+
+  useEffect(() => {
+    fetchSales();
+    fetchProducts();
+  }, [fetchSales, fetchProducts]);
 
   const form = useForm<z.infer<typeof salesSchema>>({
     resolver: zodResolver(salesSchema),
@@ -66,8 +108,10 @@ export default function SalesPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof salesSchema>) {
-    const product = products.find((p) => p.id === values.productId);
+  async function onSubmit(values: z.infer<typeof salesSchema>) {
+    if (!user) return;
+    
+    const product = products.find((p) => p.id === values.product_id);
     if (!product) {
       toast({
         title: "Error",
@@ -86,54 +130,62 @@ export default function SalesPage() {
       return;
     }
 
-    const newSale: Sale = {
-      id: new Date().toISOString(),
+    const newSale = {
       date: values.date.toISOString(),
-      productId: values.productId,
-      productName: product.name,
+      product_id: values.product_id,
       quantity: values.quantity,
-      amount: product.sellingPrice * values.quantity,
+      amount: product.selling_price * values.quantity,
+      user_id: user.id,
     };
     
-    // Decrease product quantity
-    const updatedProducts = products.map((p) =>
-      p.id === values.productId
-        ? { ...p, quantity: p.quantity - values.quantity }
-        : p
-    );
-    setProducts(updatedProducts);
-    
-    setSales([newSale, ...sales]);
+    // Using a transaction to ensure both operations succeed or fail together
+    const { error } = await supabase.rpc('record_sale', {
+        p_product_id: newSale.product_id,
+        p_quantity: newSale.quantity,
+        p_amount: newSale.amount,
+        p_date: newSale.date,
+        p_user_id: newSale.user_id
+    })
 
-    toast({
-      title: "Success!",
-      description: "Daily sale has been added.",
-    });
-    form.reset({
-      date: new Date(),
-      productId: "",
-      quantity: 1,
-    });
+    if (error) {
+       toast({
+        title: "Error recording sale",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success!",
+        description: "Daily sale has been added.",
+      });
+      form.reset({
+        date: new Date(),
+        product_id: 0,
+        quantity: 1,
+      });
+      fetchSales();
+      fetchProducts();
+    }
   }
   
-  const deleteSale = (saleId: string) => {
-    const saleToDelete = sales.find(s => s.id === saleId);
-    if (!saleToDelete) return;
+  async function deleteSale(sale: Sale) {
+    const { error } = await supabase.rpc('delete_sale', {
+        p_sale_id: sale.id,
+        p_product_id: sale.product_id,
+        p_quantity: sale.quantity
+    });
 
-    // Increase product quantity back
-    const updatedProducts = products.map((p) =>
-      p.id === saleToDelete.productId
-        ? { ...p, quantity: p.quantity + saleToDelete.quantity }
-        : p
-    );
-    setProducts(updatedProducts);
-
-    setSales(sales.filter(sale => sale.id !== saleId));
-    toast({
-      title: "Sale Deleted",
-      description: "The sale record has been removed.",
-      variant: "destructive",
-    })
+    if (error) {
+       toast({ title: "Error deleting sale", description: error.message, variant: "destructive" });
+    } else {
+        toast({
+            title: "Sale Deleted",
+            description: "The sale record has been removed.",
+            variant: "destructive",
+        });
+        fetchSales();
+        fetchProducts();
+    }
   }
 
   const formatCurrency = (amount: number) => {
@@ -204,13 +256,12 @@ export default function SalesPage() {
 
                 <FormField
                   control={form.control}
-                  name="productId"
+                  name="product_id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Product</FormLabel>
                       <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        onValueChange={(value) => field.onChange(parseInt(value))}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -219,7 +270,7 @@ export default function SalesPage() {
                         </FormControl>
                         <SelectContent>
                           {products.map((p) => (
-                            <SelectItem key={p.id} value={p.id}>
+                            <SelectItem key={p.id} value={p.id.toString()}>
                               {p.name} (Stock: {p.quantity})
                             </SelectItem>
                           ))}
@@ -272,13 +323,13 @@ export default function SalesPage() {
                     sales.map((sale) => (
                       <TableRow key={sale.id}>
                         <TableCell>{format(new Date(sale.date), "PPP")}</TableCell>
-                        <TableCell>{sale.productName}</TableCell>
+                        <TableCell>{sale.product_name}</TableCell>
                         <TableCell>{sale.quantity}</TableCell>
                         <TableCell className="text-right font-medium">
                           {formatCurrency(sale.amount)}
                         </TableCell>
                          <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => deleteSale(sale.id)}>
+                          <Button variant="ghost" size="icon" onClick={() => deleteSale(sale)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </TableCell>
@@ -300,3 +351,4 @@ export default function SalesPage() {
     </main>
   );
 }
+
