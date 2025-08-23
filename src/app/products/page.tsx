@@ -141,7 +141,7 @@ export default function ProductsPage() {
     }
   }
 
-  const deleteProduct = async (id: number) => {
+  const deleteProduct = async (id: string) => {
     const { error } = await supabase.from('products').delete().eq('id', id);
     if (error) {
       toast({ title: "Error deleting product", description: error.message, variant: "destructive" });
@@ -253,6 +253,7 @@ export default function ProductsPage() {
                     <TableHead>Name</TableHead>
                     <TableHead>Purchase Price</TableHead>
                     <TableHead>Selling Price</TableHead>
+                    <TableHead>Profit</TableHead>
                     <TableHead>Quantity</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -269,6 +270,9 @@ export default function ProductsPage() {
                         </TableCell>
                         <TableCell>
                           {formatCurrency(product.selling_price)}
+                        </TableCell>
+                        <TableCell className="font-medium text-green-600">
+                          {formatCurrency(product.selling_price - product.purchase_price)}
                         </TableCell>
                         <TableCell>{product.quantity}</TableCell>
                         <TableCell className="text-right">
@@ -291,7 +295,7 @@ export default function ProductsPage() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-10">
+                      <TableCell colSpan={6} className="text-center py-10">
                         No products added yet.
                       </TableCell>
                     </TableRow>
@@ -385,4 +389,5 @@ export default function ProductsPage() {
       </Dialog>
     </main>
   );
-}
+
+    
