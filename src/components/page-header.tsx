@@ -19,11 +19,11 @@ export function PageHeader({
       )}
     >
       <div className="grid gap-1">
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
           {title}
         </h1>
         {description && (
-          <p className="text-muted-foreground">{description}</p>
+          <p className="text-muted-foreground max-w-lg">{description}</p>
         )}
       </div>
       <div className="flex-shrink-0">{children}</div>

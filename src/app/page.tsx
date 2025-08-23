@@ -54,73 +54,40 @@ export default function Home() {
     }).format(amount);
   };
 
+  const kpiCards = [
+    { title: "Total Revenue", icon: DollarSign, value: formatCurrency(totalSales), description: "All sales recorded" },
+    { title: "Total Expenses", icon: Receipt, value: formatCurrency(totalExpenses), description: "All expenses recorded" },
+    { title: "Net Profit", icon: Wallet, value: formatCurrency(profit), description: "Revenue minus expenses", isProfit: true },
+    { title: "Profit Margin", icon: TrendingUp, value: totalSales > 0 ? `${((profit / totalSales) * 100).toFixed(2)}%` : '0.00%', description: "Net profit margin" },
+  ];
+
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 animate-in">
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
       </div>
       <div className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Revenue
-              </CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(totalSales)}</div>
-              <p className="text-xs text-muted-foreground">
-                All sales recorded
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Expenses
-              </CardTitle>
-              <Receipt className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(totalExpenses)}</div>
-              <p className="text-xs text-muted-foreground">
-                All expenses recorded
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
-              <Wallet className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${profit >= 0 ? 'text-accent-foreground' : 'text-destructive'}`}>
-                {formatCurrency(profit)}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Revenue minus expenses
-              </p>
-            </CardContent>
-          </Card>
-           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Profit Margin
-              </CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {totalSales > 0 ? `${((profit / totalSales) * 100).toFixed(2)}%` : '0.00%'}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Net profit margin
-              </p>
-            </CardContent>
-          </Card>
+          {kpiCards.map((card, index) => (
+             <Card key={index} className="shadow-sm hover:shadow-md transition-shadow duration-300">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {card.title}
+                </CardTitle>
+                <card.icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${card.isProfit && (profit >= 0 ? 'text-green-600' : 'text-destructive')}`}>
+                    {card.value}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {card.description}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-        <Card className="col-span-1 lg:col-span-3">
+        <Card className="col-span-1 lg:col-span-3 shadow-sm hover:shadow-md transition-shadow duration-300">
           <CardHeader>
             <CardTitle>Welcome to Balance!</CardTitle>
           </CardHeader>
@@ -134,4 +101,3 @@ export default function Home() {
     </div>
   );
 }
-

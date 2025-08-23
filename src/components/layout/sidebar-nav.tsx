@@ -49,7 +49,7 @@ export function SidebarNav() {
       <SidebarHeader>
         <div className="flex items-center gap-2">
             <Banknote className="w-6 h-6 text-primary" />
-            <span className="text-lg font-semibold text-primary">Balance</span>
+            <span className="text-lg font-semibold text-primary group-data-[collapsible=icon]:hidden">Balance</span>
         </div>
       </SidebarHeader>
       <SidebarContent>

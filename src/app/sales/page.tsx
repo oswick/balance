@@ -138,7 +138,6 @@ export default function SalesPage() {
       user_id: user.id,
     };
     
-    // Using a transaction to ensure both operations succeed or fail together
     const { error } = await supabase.rpc('record_sale', {
         p_product_id: newSale.product_id,
         p_quantity: newSale.quantity,
@@ -157,6 +156,7 @@ export default function SalesPage() {
       toast({
         title: "Success!",
         description: "Daily sale has been added.",
+        variant: "success"
       });
       form.reset({
         date: new Date(),
@@ -196,13 +196,13 @@ export default function SalesPage() {
   };
 
   return (
-    <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <main className="flex-1 space-y-4 p-4 md:p-8 pt-6 animate-in">
       <PageHeader
         title="Daily Sales"
         description="Record your total sales for each day."
       />
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PlusCircle className="h-5 w-5" />
@@ -302,7 +302,7 @@ export default function SalesPage() {
             </Form>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
             <CardTitle>Sales History</CardTitle>
           </CardHeader>
@@ -321,7 +321,7 @@ export default function SalesPage() {
                 <TableBody>
                   {sales.length > 0 ? (
                     sales.map((sale) => (
-                      <TableRow key={sale.id}>
+                      <TableRow key={sale.id} className="hover:bg-muted/50 transition-colors">
                         <TableCell>{format(new Date(sale.date), "PPP")}</TableCell>
                         <TableCell>{sale.product_name}</TableCell>
                         <TableCell>{sale.quantity}</TableCell>
