@@ -15,7 +15,7 @@ type SupabaseContext = {
 const Context = createContext<SupabaseContext | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [supabase] = useState(() => createClient());
+  const supabase = createClient();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -28,15 +28,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       setLoading(false);
       
-      if (event === 'SIGNED_OUT') {
-        router.push('/login');
+      if (session?.user && (pathname === '/login')) {
+         router.push('/');
       }
+      
+      if (!session?.user && (pathname !== '/login')) {
+         router.push('/login');
+      }
+
     });
 
     const checkUser = async () => {
-      const { data } = await supabase.auth.getUser();
+      const { data, error } = await supabase.auth.getUser();
+      if (error) {
+        setLoading(false)
+        router.push('/login')
+        return
+      }
       setUser(data.user);
       setLoading(false);
+      if (data.user && (pathname === '/login')) {
+         router.push('/');
+      }
+      if (!data.user && (pathname !== '/login')) {
+         router.push('/login');
+      }
     }
     
     checkUser();
@@ -44,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [router, supabase]);
+  }, [router, supabase, pathname]);
 
   const value = {
     supabase,
@@ -56,19 +72,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return null; // Or a global loading spinner
   }
 
-  if (user && pathname === '/login') {
-    router.push('/');
-    return null; // or a loading spinner
-  }
-
-  if (!user && pathname !== '/login') {
-    router.push('/login');
-    return null; // or a loading spinner
-  }
-
   return (
     <Context.Provider value={value}>
-        {pathname === '/login' ? children : <MainLayout>{children}</MainLayout>}
+        {user ? <MainLayout>{children}</MainLayout> : children}
     </Context.Provider>
   );
 }
