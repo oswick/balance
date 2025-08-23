@@ -88,7 +88,7 @@ export default function Home() {
         </div>
         <Card className="col-span-1 lg:col-span-3">
           <CardHeader>
-            <CardTitle>Welcome to BizBalance!</CardTitle>
+            <CardTitle>Welcome to Balance!</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">

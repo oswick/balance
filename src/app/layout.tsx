@@ -5,7 +5,7 @@ import MainLayout from '@/components/layout/main-layout';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'BizBalance',
+  title: 'Balance',
   description: 'Your small business accounting companion.',
 };
 
