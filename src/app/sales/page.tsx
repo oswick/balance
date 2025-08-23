@@ -105,6 +105,7 @@ export default function SalesPage() {
     defaultValues: {
       date: new Date(),
       quantity: 1,
+      product_id: 0,
     },
   });
 
@@ -261,7 +262,7 @@ export default function SalesPage() {
                     <FormItem>
                       <FormLabel>Product</FormLabel>
                       <Select
-                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        onValueChange={(value) => field.onChange(Number(value) || 0)}
                       >
                         <FormControl>
                           <SelectTrigger>

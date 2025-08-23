@@ -111,6 +111,9 @@ export default function PurchasesPage() {
     defaultValues: {
       date: new Date(),
       quantity: 1,
+      product_id: 0,
+      supplier_id: 0,
+      total_cost: 0
     },
   });
 
@@ -208,7 +211,7 @@ export default function PurchasesPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Product</FormLabel>
-                      <Select onValueChange={(value) => field.onChange(parseInt(value))} >
+                      <Select onValueChange={(value) => field.onChange(Number(value) || 0)} >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a product" />
@@ -226,7 +229,7 @@ export default function PurchasesPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Supplier</FormLabel>
-                      <Select onValueChange={(value) => field.onChange(parseInt(value))}>
+                      <Select onValueChange={(value) => field.onChange(Number(value) || 0)}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a supplier" />
@@ -312,4 +315,3 @@ export default function PurchasesPage() {
     </main>
   );
 }
-
