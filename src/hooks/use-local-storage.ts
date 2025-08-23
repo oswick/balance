@@ -1,41 +1,60 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
 
-export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
-  const [storedValue, setStoredValue] = useState<T>(initialValue);
-
-  // We need to use a useEffect to ensure this code runs on the client, avoiding hydration errors.
+// Hook to check if the code is running in the browser
+const useIsClient = () => {
+  const [isClient, setIsClient] = useState(false);
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+  return isClient;
+};
+
+export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
+  const isClient = useIsClient();
+
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    if (!isClient) {
+      return initialValue;
+    }
     try {
       const item = window.localStorage.getItem(key);
-      if (item) {
-        setStoredValue(JSON.parse(item));
-      } else {
-        // This part is safe to run here as it will only execute on the client.
-        window.localStorage.setItem(key, JSON.stringify(initialValue));
-        setStoredValue(initialValue);
-      }
+      return item ? JSON.parse(item) : initialValue;
     } catch (error) {
       console.error(`Error reading from localStorage key “${key}”:`, error);
-      setStoredValue(initialValue);
+      return initialValue;
     }
-  }, [key, initialValue]);
+  });
+
+  useEffect(() => {
+    if (isClient) {
+        try {
+            const item = window.localStorage.getItem(key);
+            if (item) {
+                setStoredValue(JSON.parse(item));
+            } else {
+                window.localStorage.setItem(key, JSON.stringify(initialValue));
+            }
+        } catch (error) {
+            console.error(`Error reading from localStorage key “${key}”:`, error);
+        }
+    }
+  }, [key, initialValue, isClient]);
 
   const setValue = useCallback((value: T | ((val: T) => T)) => {
+    if (!isClient) {
+      return;
+    }
     try {
-      // Allow value to be a function so we have the same API as useState
       const valueToStore = value instanceof Function ? value(storedValue) : value;
-      // Save state
       setStoredValue(valueToStore);
-      // Save to local storage
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem(key, JSON.stringify(valueToStore));
-      }
+      window.localStorage.setItem(key, JSON.stringify(valueToStore));
     } catch (error) {
       console.error(`Error setting localStorage key “${key}”:`, error);
     }
-  }, [key, storedValue]);
+  }, [key, storedValue, isClient]);
 
   return [storedValue, setValue];
 }
