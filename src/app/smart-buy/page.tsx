@@ -65,9 +65,9 @@ export default function SmartBuyPage() {
             </Alert>
           )}
           {suggestion && !isLoading && (
-            <div className="p-6 bg-secondary rounded-lg">
+            <div className="p-6 bg-secondary">
                 <div className="flex items-start gap-4">
-                    <div className="p-2 bg-primary/10 rounded-full">
+                    <div className="p-2 bg-primary/10">
                         <Lightbulb className="h-6 w-6 text-primary"/>
                     </div>
                     <div className="flex-1 space-y-2">
