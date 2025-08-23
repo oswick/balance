@@ -54,7 +54,7 @@ export default function SmartBuyPage() {
             This tool analyzes your sales, expenses, product and supplier data to provide suggestions on optimal purchasing strategies.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="min-h-[150px]">
           {!hasEnoughData && (
              <Alert variant="destructive">
               <Lightbulb className="h-4 w-4" />
@@ -67,7 +67,7 @@ export default function SmartBuyPage() {
           {suggestion && !isLoading && (
             <div className="p-6 bg-secondary">
                 <div className="flex items-start gap-4">
-                    <div className="p-2 bg-primary/10">
+                    <div className="p-2 bg-primary/10 rounded-none">
                         <Lightbulb className="h-6 w-6 text-primary"/>
                     </div>
                     <div className="flex-1 space-y-2">

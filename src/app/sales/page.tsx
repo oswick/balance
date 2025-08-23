@@ -68,7 +68,10 @@ export default function SalesPage() {
       title: "Success!",
       description: "Daily sale has been added.",
     });
-    form.reset();
+    form.reset({
+      date: new Date(),
+      amount: 0,
+    });
   }
   
   const deleteSale = (id: string) => {
@@ -103,7 +106,7 @@ export default function SalesPage() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
                   name="date"

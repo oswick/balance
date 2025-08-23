@@ -71,7 +71,12 @@ export default function ExpensesPage() {
       title: "Success!",
       description: "Expense has been added.",
     });
-    form.reset();
+    form.reset({
+      date: new Date(),
+      category: "",
+      description: "",
+      amount: 0,
+    });
   }
   
   const deleteExpense = (id: string) => {
