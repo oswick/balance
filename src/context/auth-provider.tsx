@@ -1,9 +1,10 @@
+
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next-intl/navigation';
 import MainLayout from '@/components/layout/main-layout';
 
 type SupabaseContext = {
@@ -18,41 +19,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
-  const pathname = usePathname();
-
+  
   useEffect(() => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
-      
-      if (session?.user && (pathname === '/login')) {
-         router.push('/');
-      }
-      
-      if (!session?.user && (pathname !== '/login')) {
-         router.push('/login');
-      }
-
     });
 
     const checkUser = async () => {
       const { data, error } = await supabase.auth.getUser();
       if (error) {
-        setLoading(false)
-        router.push('/login')
+        setLoading(false);
         return
       }
       setUser(data.user);
       setLoading(false);
-      if (data.user && (pathname === '/login')) {
-         router.push('/');
-      }
-      if (!data.user && (pathname !== '/login')) {
-         router.push('/login');
-      }
     }
     
     checkUser();
@@ -60,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [router, supabase, pathname]);
+  }, [supabase]);
 
   const value = {
     supabase,
@@ -68,13 +51,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
   };
   
-  if (loading) {
-    return null; // Or a global loading spinner
-  }
-
   return (
     <Context.Provider value={value}>
-        {user ? <MainLayout>{children}</MainLayout> : children}
+        <MainLayout>
+            {children}
+        </MainLayout>
     </Context.Provider>
   );
 }

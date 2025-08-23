@@ -211,7 +211,7 @@ export default function PurchasesPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Product</FormLabel>
-                      <Select onValueChange={(value) => field.onChange(Number(value) || 0)} >
+                      <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={field.value.toString()} value={field.value.toString()} >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a product" />
@@ -229,7 +229,7 @@ export default function PurchasesPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Supplier</FormLabel>
-                      <Select onValueChange={(value) => field.onChange(Number(value) || 0)}>
+                      <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={field.value.toString()} value={field.value.toString()}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a supplier" />
@@ -306,7 +306,7 @@ export default function PurchasesPage() {
                       <TableCell colSpan={6} className="text-center py-10">No purchases logged yet.</TableCell>
                     </TableRow>
                   )}
-                </TableBody>
+                </Tbody>
               </Table>
             </div>
           </CardContent>

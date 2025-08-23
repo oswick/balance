@@ -262,7 +262,9 @@ export default function SalesPage() {
                     <FormItem>
                       <FormLabel>Product</FormLabel>
                       <Select
-                        onValueChange={(value) => field.onChange(Number(value) || 0)}
+                        onValueChange={(value) => field.onChange(Number(value))}
+                        defaultValue={field.value.toString()}
+                        value={field.value.toString()}
                       >
                         <FormControl>
                           <SelectTrigger>
