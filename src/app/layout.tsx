@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { cn } from '@/lib/utils';
-import MainLayout from '@/components/layout/main-layout';
 import { Toaster } from "@/components/ui/toaster"
+import { AuthProvider } from '@/context/auth-provider';
 
 export const metadata: Metadata = {
   title: 'Balance',
@@ -25,7 +25,9 @@ export default function RootLayout({
         ></link>
       </head>
       <body className={cn('font-body antialiased min-h-screen')}>
-        <MainLayout>{children}</MainLayout>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
         <Toaster />
       </body>
     </html>
