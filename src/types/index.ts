@@ -1,6 +1,10 @@
+
 export interface Sale {
   id: string;
   date: string;
+  productId: string;
+  productName: string;
+  quantity: number;
   amount: number;
 }
 
@@ -17,10 +21,11 @@ export interface Product {
   name: string;
   purchasePrice: number;
   sellingPrice: number;
+  quantity: number;
 }
 
 export interface Purchase {
-  id: string;
+  id:string;
   date: string;
   productId: string;
   productName: string;

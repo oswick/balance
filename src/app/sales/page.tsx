@@ -1,6 +1,6 @@
+
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -8,7 +8,7 @@ import { format } from "date-fns";
 import { Calendar as CalendarIcon, PlusCircle, Trash2 } from "lucide-react";
 
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import { Sale } from "@/types";
+import { Sale, Product } from "@/types";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -36,46 +36,99 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
 const salesSchema = z.object({
   date: z.date({
     required_error: "A date is required.",
   }),
-  amount: z.coerce.number().min(0.01, "Amount must be greater than 0."),
+  productId: z.string().min(1, "Please select a product."),
+  quantity: z.coerce.number().min(1, "Quantity must be at least 1."),
 });
 
 export default function SalesPage() {
   const [sales, setSales] = useLocalStorage<Sale[]>("sales", []);
+  const [products, setProducts] = useLocalStorage<Product[]>("products", []);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof salesSchema>>({
     resolver: zodResolver(salesSchema),
     defaultValues: {
       date: new Date(),
-      amount: 0,
+      quantity: 1,
     },
   });
 
   function onSubmit(values: z.infer<typeof salesSchema>) {
+    const product = products.find((p) => p.id === values.productId);
+    if (!product) {
+      toast({
+        title: "Error",
+        description: "Product not found.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (product.quantity < values.quantity) {
+      toast({
+        title: "Error",
+        description: `Not enough stock for ${product.name}. Available: ${product.quantity}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     const newSale: Sale = {
       id: new Date().toISOString(),
       date: values.date.toISOString(),
-      amount: values.amount,
+      productId: values.productId,
+      productName: product.name,
+      quantity: values.quantity,
+      amount: product.sellingPrice * values.quantity,
     };
+    
+    // Decrease product quantity
+    const updatedProducts = products.map((p) =>
+      p.id === values.productId
+        ? { ...p, quantity: p.quantity - values.quantity }
+        : p
+    );
+    setProducts(updatedProducts);
+    
     setSales([newSale, ...sales]);
+
     toast({
       title: "Success!",
       description: "Daily sale has been added.",
     });
     form.reset({
       date: new Date(),
-      amount: 0,
+      productId: "",
+      quantity: 1,
     });
   }
   
-  const deleteSale = (id: string) => {
-    setSales(sales.filter(sale => sale.id !== id));
+  const deleteSale = (saleId: string) => {
+    const saleToDelete = sales.find(s => s.id === saleId);
+    if (!saleToDelete) return;
+
+    // Increase product quantity back
+    const updatedProducts = products.map((p) =>
+      p.id === saleToDelete.productId
+        ? { ...p, quantity: p.quantity + saleToDelete.quantity }
+        : p
+    );
+    setProducts(updatedProducts);
+
+    setSales(sales.filter(sale => sale.id !== saleId));
     toast({
       title: "Sale Deleted",
       description: "The sale record has been removed.",
@@ -148,19 +201,49 @@ export default function SalesPage() {
                     </FormItem>
                   )}
                 />
+
                 <FormField
                   control={form.control}
-                  name="amount"
+                  name="productId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Total Sales Amount</FormLabel>
+                      <FormLabel>Product</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a product" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {products.map((p) => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.name} (Stock: {p.quantity})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="quantity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Quantity Sold</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="1500.00" {...field} />
+                        <Input type="number" placeholder="1" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+                
                 <Button type="submit" className="w-full">
                   Add Sale
                 </Button>
@@ -178,6 +261,8 @@ export default function SalesPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Date</TableHead>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Quantity</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -187,6 +272,8 @@ export default function SalesPage() {
                     sales.map((sale) => (
                       <TableRow key={sale.id}>
                         <TableCell>{format(new Date(sale.date), "PPP")}</TableCell>
+                        <TableCell>{sale.productName}</TableCell>
+                        <TableCell>{sale.quantity}</TableCell>
                         <TableCell className="text-right font-medium">
                           {formatCurrency(sale.amount)}
                         </TableCell>
@@ -199,7 +286,7 @@ export default function SalesPage() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={3} className="text-center py-10">
+                      <TableCell colSpan={5} className="text-center py-10">
                         No sales recorded yet.
                       </TableCell>
                     </TableRow>

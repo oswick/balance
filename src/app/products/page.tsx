@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -33,6 +34,7 @@ const productSchema = z.object({
   name: z.string().min(1, "Product name is required."),
   purchasePrice: z.coerce.number().min(0, "Purchase price cannot be negative."),
   sellingPrice: z.coerce.number().min(0, "Selling price cannot be negative."),
+  quantity: z.coerce.number().min(0, "Quantity cannot be negative."),
 });
 
 export default function ProductsPage() {
@@ -45,6 +47,7 @@ export default function ProductsPage() {
       name: "",
       purchasePrice: 0,
       sellingPrice: 0,
+      quantity: 0,
     },
   });
 
@@ -58,7 +61,12 @@ export default function ProductsPage() {
       title: "Success!",
       description: "Product has been added to your catalog.",
     });
-    form.reset();
+    form.reset({
+      name: "",
+      purchasePrice: 0,
+      sellingPrice: 0,
+      quantity: 0,
+    });
   }
 
   const deleteProduct = (id: string) => {
@@ -133,6 +141,19 @@ export default function ProductsPage() {
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="quantity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Initial Quantity</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="100" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <Button type="submit" className="w-full">
                   Add Product
                 </Button>
@@ -152,6 +173,7 @@ export default function ProductsPage() {
                     <TableHead>Name</TableHead>
                     <TableHead>Purchase Price</TableHead>
                     <TableHead>Selling Price</TableHead>
+                    <TableHead>Quantity</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -162,6 +184,7 @@ export default function ProductsPage() {
                         <TableCell className="font-medium">{product.name}</TableCell>
                         <TableCell>{formatCurrency(product.purchasePrice)}</TableCell>
                         <TableCell>{formatCurrency(product.sellingPrice)}</TableCell>
+                        <TableCell>{product.quantity}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" onClick={() => deleteProduct(product.id)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
@@ -171,7 +194,7 @@ export default function ProductsPage() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-10">
+                      <TableCell colSpan={5} className="text-center py-10">
                         No products added yet.
                       </TableCell>
                     </TableRow>
