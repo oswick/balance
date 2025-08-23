@@ -163,7 +163,7 @@ export default function PurchasesPage() {
       });
       fetchPurchases();
     }
-  }
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
@@ -306,7 +306,7 @@ export default function PurchasesPage() {
                       <TableCell colSpan={6} className="text-center py-10">No purchases logged yet.</TableCell>
                     </TableRow>
                   )}
-                </Tbody>
+                </TableBody>
               </Table>
             </div>
           </CardContent>
