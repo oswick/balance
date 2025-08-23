@@ -1,10 +1,13 @@
 
 'use server';
-import { smartBuySuggestion as smartBuySuggestionFlow, SmartBuySuggestionInput, SmartBuySuggestionOutput } from '@/ai/flows/smart-buy-suggestion';
+
+import type { SmartBuySuggestionInput, SmartBuySuggestionOutput } from '@/ai/flows/smart-buy-suggestion';
 
 export async function getSmartBuySuggestion(input: SmartBuySuggestionInput): Promise<SmartBuySuggestionOutput> {
     try {
-        const result = await smartBuySuggestionFlow(input);
+        // Dynamically import the flow only when the function is called on the server
+        const { smartBuySuggestion } = await import('@/ai/flows/smart-buy-suggestion');
+        const result = await smartBuySuggestion(input);
         return result;
     } catch (error) {
         console.error("Error getting smart buy suggestion:", error);
