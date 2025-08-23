@@ -48,29 +48,65 @@ const expenseSchema = z.object({
   amount: z.coerce.number().min(0.01, "Amount must be greater than 0."),
 });
 
+type CombinedExpense = Expense & { isPurchase?: boolean, productName?: string };
+
 export default function ExpensesPage() {
   const { supabase, user } = useAuth();
-  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [expenses, setExpenses] = useState<CombinedExpense[]>([]);
   const { toast } = useToast();
 
-  const fetchExpenses = React.useCallback(async () => {
+  const fetchExpensesAndPurchases = React.useCallback(async () => {
     if (!user) return;
-    const { data, error } = await supabase
+    
+    // Fetch regular expenses
+    const { data: expensesData, error: expensesError } = await supabase
       .from('expenses')
       .select('*')
-      .eq('user_id', user.id)
-      .order('date', { ascending: false });
+      .eq('user_id', user.id);
 
-    if (error) {
-      toast({ title: "Error fetching expenses", description: error.message, variant: "destructive" });
-    } else {
-      setExpenses(data as Expense[]);
+    if (expensesError) {
+      toast({ title: "Error fetching expenses", description: expensesError.message, variant: "destructive" });
+      return;
     }
+
+    // Fetch purchases
+    const { data: purchasesData, error: purchasesError } = await supabase
+      .from('purchases')
+      .select('*, products(name)')
+      .eq('user_id', user.id);
+      
+    if (purchasesError) {
+      toast({ title: "Error fetching purchases", description: purchasesError.message, variant: "destructive" });
+      return;
+    }
+
+    // Combine and format
+    const combined = [
+      ...(expensesData || []).map(e => ({...e, isPurchase: false})),
+      ...(purchasesData || []).map((p: any) => ({
+        id: p.id,
+        date: p.date,
+        category: "Product Purchase",
+        description: `Purchase of ${p.products.name}`,
+        amount: p.total_cost,
+        user_id: p.user_id,
+        created_at: p.created_at,
+        isPurchase: true,
+        productName: p.products.name,
+      }))
+    ];
+    
+    // Sort by date descending
+    combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    setExpenses(combined);
+
   }, [supabase, user, toast]);
 
+
   useEffect(() => {
-    fetchExpenses();
-  }, [fetchExpenses]);
+    fetchExpensesAndPurchases();
+  }, [fetchExpensesAndPurchases]);
 
   const form = useForm<z.infer<typeof expenseSchema>>({
     resolver: zodResolver(expenseSchema),
@@ -106,11 +142,11 @@ export default function ExpensesPage() {
         description: "",
         amount: 0,
       });
-      fetchExpenses();
+      fetchExpensesAndPurchases();
     }
   }
   
-  const deleteExpense = async (id: number) => {
+  const deleteExpense = async (id: string) => {
     const { error } = await supabase.from('expenses').delete().eq('id', id);
     if(error) {
        toast({
@@ -124,7 +160,7 @@ export default function ExpensesPage() {
         description: "The expense record has been removed.",
         variant: "destructive",
       })
-      fetchExpenses();
+      fetchExpensesAndPurchases();
     }
   }
 
@@ -266,9 +302,15 @@ export default function ExpensesPage() {
                           {formatCurrency(expense.amount)}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => deleteExpense(expense.id)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
+                           <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => deleteExpense(expense.id)}
+                              disabled={expense.isPurchase}
+                              title={expense.isPurchase ? "Cannot delete purchases from here" : "Delete expense"}
+                            >
+                              <Trash2 className={`h-4 w-4 ${!expense.isPurchase && 'text-destructive'}`} />
+                            </Button>
                         </TableCell>
                       </TableRow>
                     ))
@@ -288,4 +330,3 @@ export default function ExpensesPage() {
     </main>
   );
 }
-
