@@ -3,10 +3,15 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
+  console.log('🔥 Callback route hit:', request.url);
+  
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  // if "next" is in param, use it as the redirect URL
   const next = searchParams.get('next') ?? '/'
+
+  console.log('📝 Code received:', code);
+  console.log('📍 Origin:', origin);
+  console.log('➡️ Next URL:', next);
 
   if (code) {
     const cookieStore = await cookies()
@@ -27,12 +32,20 @@ export async function GET(request: Request) {
         },
       }
     )
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
+    
+    console.log('🔄 Exchanging code for session...');
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+    
+    if (error) {
+      console.error('❌ Exchange error:', error);
+    } else {
+      console.log('✅ Session created successfully:', data.user?.email);
       return NextResponse.redirect(`${origin}${next}`)
     }
+  } else {
+    console.log('❌ No code found in URL');
   }
 
-  // return the user to an error page with instructions
+  console.log('🔄 Redirecting to error page');
   return NextResponse.redirect(`${origin}/auth/auth-code-error`)
 }

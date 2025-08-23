@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/context/auth-provider';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -18,17 +18,20 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-
 export default function LoginPage() {
-  const supabase = createClient();
+  const { supabase } = useAuth();
 
   const handleGoogleLogin = async () => {
-    await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
+    
+    if (error) {
+      console.error('Error during login:', error);
+    }
   };
 
   return (
