@@ -89,7 +89,7 @@ export default function SuppliersPage() {
     }
   }
   
-  const deleteSupplier = async (id: number) => {
+  const deleteSupplier = async (id: string) => {
     const { error } = await supabase.from('suppliers').delete().eq('id', id);
     if(error){
       toast({ title: "Error deleting supplier", description: error.message, variant: "destructive" });
@@ -109,8 +109,8 @@ export default function SuppliersPage() {
         title="Supplier Management"
         description="Maintain supplier contacts, product types, and purchase days."
       />
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card className="md:col-span-1">
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PlusCircle className="h-5 w-5" />
@@ -166,7 +166,7 @@ export default function SuppliersPage() {
             </Form>
           </CardContent>
         </Card>
-        <Card className="md:col-span-2">
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Your Suppliers</CardTitle>
           </CardHeader>

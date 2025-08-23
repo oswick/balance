@@ -7,7 +7,7 @@ import { SidebarNav } from "./sidebar-nav";
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
-      <Sidebar side="left" variant="sidebar" collapsible="icon">
+      <Sidebar side="left" variant="sidebar" collapsible="offcanvas">
         <SidebarNav />
       </Sidebar>
       <SidebarInset className="bg-background min-h-screen">

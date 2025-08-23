@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -183,8 +184,8 @@ export default function PurchasesPage() {
         title="Product Purchases"
         description="Record product purchases, supplier, and cost details."
       />
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card className="md:col-span-1">
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PlusCircle className="h-5 w-5" /> Log New Purchase
@@ -221,7 +222,7 @@ export default function PurchasesPage() {
                       <FormLabel>Product</FormLabel>
                       <Select 
                         onValueChange={field.onChange}
-                        value={field.value}
+                        defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -242,7 +243,7 @@ export default function PurchasesPage() {
                       <FormLabel>Supplier</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        value={field.value}
+                        defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -284,7 +285,7 @@ export default function PurchasesPage() {
             </Form>
           </CardContent>
         </Card>
-        <Card className="md:col-span-2">
+        <Card className="lg:col-span-2">
           <CardHeader><CardTitle>Purchase History</CardTitle></CardHeader>
           <CardContent>
             <div className="max-h-[560px] overflow-auto">

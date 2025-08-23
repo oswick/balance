@@ -168,8 +168,8 @@ export default function ProductsPage() {
         title="Product Catalog"
         description="Manage your products, including purchase and selling prices."
       />
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card className="md:col-span-1">
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PlusCircle className="h-5 w-5" />
@@ -241,7 +241,7 @@ export default function ProductsPage() {
             </Form>
           </CardContent>
         </Card>
-        <Card className="md:col-span-2">
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Your Products</CardTitle>
           </CardHeader>

@@ -1,3 +1,4 @@
+
 // src/types/index.ts - Updated to match database schema
 
 export interface Sale {
