@@ -202,7 +202,7 @@ export default function SalesPage() {
         description="Record your total sales for each day."
       />
       <div className="grid gap-6 md:grid-cols-2">
-        <Card className="shadow-sm">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PlusCircle className="h-5 w-5" />
@@ -302,7 +302,7 @@ export default function SalesPage() {
             </Form>
           </CardContent>
         </Card>
-        <Card className="shadow-sm">
+        <Card>
           <CardHeader>
             <CardTitle>Sales History</CardTitle>
           </CardHeader>
@@ -321,7 +321,7 @@ export default function SalesPage() {
                 <TableBody>
                   {sales.length > 0 ? (
                     sales.map((sale) => (
-                      <TableRow key={sale.id} className="hover:bg-muted/50 transition-colors">
+                      <TableRow key={sale.id}>
                         <TableCell>{format(new Date(sale.date), "PPP")}</TableCell>
                         <TableCell>{sale.product_name}</TableCell>
                         <TableCell>{sale.quantity}</TableCell>
@@ -351,4 +351,3 @@ export default function SalesPage() {
     </main>
   );
 }
-

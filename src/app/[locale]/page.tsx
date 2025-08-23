@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sale, Expense } from "@/types";
 import { DollarSign, Receipt, TrendingUp, Wallet } from "lucide-react";
 import { useAuth } from "@/context/auth-provider";
 import { useToast } from "@/hooks/use-toast";
@@ -70,7 +69,7 @@ export default function Home() {
       <div className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {kpiCards.map((card, index) => (
-             <Card key={index} className="shadow-sm hover:shadow-md transition-shadow duration-300">
+             <Card key={index} className="">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   {card.title}
@@ -78,7 +77,7 @@ export default function Home() {
                 <card.icon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${card.isProfit && (profit >= 0 ? 'text-green-600' : 'text-destructive')}`}>
+                <div className={`text-2xl font-bold ${card.isProfit && (profit >= 0 ? '' : 'text-destructive')}`}>
                     {card.value}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -88,7 +87,7 @@ export default function Home() {
             </Card>
           ))}
         </div>
-        <Card className="col-span-1 lg:col-span-3 shadow-sm hover:shadow-md transition-shadow duration-300">
+        <Card className="col-span-1 lg:col-span-3">
           <CardHeader>
             <CardTitle>{t('welcome.title')}</CardTitle>
           </CardHeader>
