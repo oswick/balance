@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/auth-provider';
+import ProtectedLayout from '../(protected)/layout';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -18,7 +19,7 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-export default function LoginPage() {
+function LoginPageContent() {
   const { supabase } = useAuth();
 
   const handleGoogleLogin = async () => {
@@ -50,4 +51,13 @@ export default function LoginPage() {
       </Card>
     </main>
   );
+}
+
+
+export default function LoginPage() {
+    return (
+        <ProtectedLayout>
+            <LoginPageContent />
+        </ProtectedLayout>
+    )
 }
