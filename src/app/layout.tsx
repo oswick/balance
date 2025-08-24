@@ -3,6 +3,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from '@/context/auth-provider';
+import { Header } from '@/components/layout/header';
 
 export const metadata: Metadata = {
   title: 'Balance',
@@ -24,8 +25,9 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={cn('font-body antialiased min-h-screen')}>
+      <body className={cn('font-body antialiased min-h-screen bg-background')}>
         <AuthProvider>
+            <Header />
             {children}
         </AuthProvider>
         <Toaster />

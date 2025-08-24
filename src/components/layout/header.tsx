@@ -22,7 +22,7 @@ const navItems = [
 
 export function Header() {
   const pathname = usePathname();
-  const { supabase } = useAuth();
+  const { user, supabase } = useAuth();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -36,55 +36,63 @@ export function Header() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full border-b-2 border-border bg-background/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 w-full border-b-2 border-border bg-background/95 backdrop-blur-sm">
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
         {/* Left: Logo / Title */}
-        <div className="flex-shrink-0">
-          <Link href="/dashboard" className="font-bold text-lg">
-            Balance
-          </Link>
-        </div>
+        <Link href={user ? "/dashboard" : "/"} className="font-bold text-lg">
+          Balance
+        </Link>
 
-        {/* Center: Navigation (hidden en móvil) */}
-        <nav className="hidden md:flex flex-1 justify-center space-x-4 text-sm font-medium">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "transition-colors px-3 py-2 rounded-md whitespace-nowrap",
-                pathname === item.href
-                  ? "bg-accent text-accent-foreground"
-                  : "text-foreground/60 hover:text-foreground/80"
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        {/* Center: Navigation (Authenticated) */}
+        {user && (
+          <nav className="hidden md:flex flex-1 justify-center space-x-2 text-sm font-medium">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "transition-colors px-3 py-2 rounded-md whitespace-nowrap",
+                  pathname === item.href
+                    ? "bg-accent text-accent-foreground"
+                    : "text-foreground/60 hover:text-foreground/80"
+                )}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        )}
 
-        {/* Right: Logout / Mobile Menu */}
+        {/* Right: Actions */}
         <div className="flex items-center space-x-2">
-          {/* Logout button desktop */}
-          <div className="hidden md:block">
-            <Button variant="ghost" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </Button>
-          </div>
+          {user ? (
+            <>
+              {/* Logout button desktop */}
+              <div className="hidden md:block">
+                <Button variant="ghost" size="sm" onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </Button>
+              </div>
 
-          {/* Mobile menu toggle */}
-          <div className="md:hidden">
-            <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
-              {isMobileMenuOpen ? <X /> : <Menu />}
-              <span className="sr-only">Toggle Menu</span>
+              {/* Mobile menu toggle */}
+              <div className="md:hidden">
+                <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
+                  {isMobileMenuOpen ? <X /> : <Menu />}
+                  <span className="sr-only">Toggle Menu</span>
+                </Button>
+              </div>
+            </>
+          ) : (
+             <Button asChild variant="default" size="sm">
+                <Link href="/login">Login</Link>
             </Button>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown - Fixed positioning */}
-      {isMobileMenuOpen && (
+      {/* Mobile Menu Dropdown (Authenticated) */}
+      {user && isMobileMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 bg-background border-b-2 border-border shadow-lg">
           <div className="flex flex-col gap-2 p-4">
             {navItems.map((item) => (

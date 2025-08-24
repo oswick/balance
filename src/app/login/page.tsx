@@ -3,6 +3,8 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/auth-provider';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -19,7 +21,14 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
 }
 
 export default function LoginPage() {
-  const { supabase } = useAuth();
+  const { supabase, user } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      router.replace('/dashboard');
+    }
+  }, [user, router]);
 
   const handleGoogleLogin = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -35,10 +44,10 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4 md:p-24">
+    <main className="flex min-h-[calc(100vh-56px)] flex-col items-center justify-center bg-background p-4 md:p-24">
       <Card className="w-full max-w-sm shadow-lg">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl md:text-3xl font-semibold">Login</CardTitle>
+          <CardTitle className="text-2xl md:text-3xl font-black">LOGIN</CardTitle>
           <CardDescription>Sign in to your Balance account</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col space-y-4">
