@@ -9,23 +9,16 @@ import {
 } from "@/components/ui/dialog"
 import { useHotkeys } from "react-hotkeys-hook"
 import React from "react"
-import { useSidebar } from "./ui/sidebar"
 
 export function Shortcuts() {
   const [open, setOpen] = React.useState(false)
-  const { toggleSidebar } = useSidebar()
 
   useHotkeys("?", () => setOpen(true), {
     preventDefault: true,
   })
   
-  useHotkeys("b", () => toggleSidebar(), {
-    preventDefault: true,
-  })
-  
   const shortcuts = [
     { key: "?", description: "Show this help menu" },
-    { key: "b", description: "Toggle sidebar" },
     { key: "n", description: "New item (in context)" },
   ]
 
