@@ -4,8 +4,8 @@
 export interface Sale {
   id: string; // Changed from number to string (UUID)
   date: string;
-  product_id: string; // Changed from number to string (UUID)
-  product_name?: string; // This might come from a join
+  product_id: string | null; // Changed from number to string (UUID)
+  product_name?: string; // This might come from a join or be manually entered
   quantity: number;
   amount: number;
   user_id: string;
@@ -53,3 +53,5 @@ export interface Supplier {
   user_id: string;
   created_at: string;
 }
+
+    
