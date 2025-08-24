@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Trash2, Pencil } from "lucide-react";
+import { Trash2, Pencil, DollarSign, Package, TrendingUp } from "lucide-react";
 import React, { useState, useEffect } from "react";
 
 import { Product } from "@/types";
@@ -109,17 +109,85 @@ export default function ProductsPage() {
 
   const calculateUnitProfit = (product: Product) => product.selling_price - (product.cost_per_unit || 0);
 
+  // Mobile Card Component
+  const ProductCard = ({ product }: { product: Product }) => (
+    <Card className="mb-4">
+      <CardContent className="p-4">
+        <div className="flex justify-between items-start mb-3">
+          <h3 className="font-semibold text-lg truncate flex-1 mr-2">{product.name}</h3>
+          <div className="flex gap-1 flex-shrink-0">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setEditingProduct(product)} 
+              title="Edit Product"
+              className="p-2 h-8 w-8"
+            >
+              <Pencil className="h-3 w-3" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => deleteProduct(product.id)} 
+              title="Delete Product"
+              className="p-2 h-8 w-8 text-destructive"
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <p className="text-muted-foreground text-xs">Cost/Unit</p>
+              <p className="font-medium">{formatCurrency(product.cost_per_unit || 0)}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <p className="text-muted-foreground text-xs">Selling Price</p>
+              <p className="font-medium">{formatCurrency(product.selling_price)}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Package className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <p className="text-muted-foreground text-xs">Quantity</p>
+              <p className="font-medium">{product.quantity}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <p className="text-muted-foreground text-xs">Unit Profit</p>
+              <p className={`font-medium ${calculateUnitProfit(product) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {formatCurrency(calculateUnitProfit(product))}
+              </p>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <ProtectedLayout>
-      <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <div className="space-y-4 p-4 pt-6">
         <PageHeader title="Product Catalog" description="View and manage your product information." />
 
-        <div className="grid gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Products</CardTitle>
-            </CardHeader>
-            <CardContent>
+        <Card>
+          <CardHeader>
+            <CardTitle>Your Products</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            {/* Desktop Table - Hidden on mobile */}
+            <div className="hidden md:block">
               <div className="max-h-[600px] overflow-x-auto">
                 <Table className="min-w-[600px]">
                   <TableHeader>
@@ -142,13 +210,15 @@ export default function ProductsPage() {
                           {formatCurrency(calculateUnitProfit(product))}
                         </TableCell>
                         <TableCell>{product.quantity}</TableCell>
-                        <TableCell className="text-right flex justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => setEditingProduct(product)} title="Edit Product">
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => deleteProduct(product.id)} title="Delete Product">
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="icon" onClick={() => setEditingProduct(product)} title="Edit Product">
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => deleteProduct(product.id)} title="Delete Product">
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     )) : (
@@ -161,50 +231,100 @@ export default function ProductsPage() {
                   </TableBody>
                 </Table>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
 
+            {/* Mobile Cards - Hidden on desktop */}
+            <div className="md:hidden">
+              {products.length > 0 ? (
+                <div className="space-y-3">
+                  {products.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-10">
+                  <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No products found.</p>
+                  <p className="text-sm text-muted-foreground mt-1">Add products in the Inventory section.</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Edit Dialog - Mobile Optimized */}
         <Dialog open={!!editingProduct} onOpenChange={(isOpen) => !isOpen && setEditingProduct(null)}>
-          <DialogContent className="w-[90vw] md:w-[500px]">
+          <DialogContent className="w-[95vw] max-w-md mx-auto">
             <DialogHeader>
-              <DialogTitle>Edit Product</DialogTitle>
-              <DialogDescription>Make changes to your product here. Click save when you're done. Cost per unit is not editable.</DialogDescription>
+              <DialogTitle className="text-lg">Edit Product</DialogTitle>
+              <DialogDescription className="text-sm">
+                Make changes to your product here. Click save when you're done. Cost per unit is not editable.
+              </DialogDescription>
             </DialogHeader>
             <Form {...editForm}>
               <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
                 <FormField control={editForm.control} name="name" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Product Name</FormLabel>
-                    <FormControl><Input placeholder="e.g., Artisan Bread" {...field} /></FormControl>
+                    <FormLabel className="text-sm">Product Name</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="e.g., Artisan Bread" 
+                        {...field} 
+                        className="text-base"
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
-                <FormField control={editForm.control} name="selling_price" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Selling Price</FormLabel>
-                    <FormControl><Input type="number" placeholder="5.00" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={editForm.control} name="quantity" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Quantity</FormLabel>
-                    <FormControl><Input type="number" placeholder="100" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <DialogFooter className="flex justify-end gap-2">
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField control={editForm.control} name="selling_price" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm">Selling Price</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="5.00" 
+                          {...field} 
+                          className="text-base"
+                          step="0.01"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  
+                  <FormField control={editForm.control} name="quantity" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm">Quantity</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="100" 
+                          {...field} 
+                          className="text-base"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+
+                <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 sm:justify-end pt-4">
                   <DialogClose asChild>
-                    <Button type="button" variant="secondary">Cancel</Button>
+                    <Button type="button" variant="secondary" className="w-full sm:w-auto">
+                      Cancel
+                    </Button>
                   </DialogClose>
-                  <Button type="submit">Save Changes</Button>
+                  <Button type="submit" className="w-full sm:w-auto">
+                    Save Changes
+                  </Button>
                 </DialogFooter>
               </form>
             </Form>
           </DialogContent>
         </Dialog>
-      </main>
+      </div>
     </ProtectedLayout>
   );
 }
