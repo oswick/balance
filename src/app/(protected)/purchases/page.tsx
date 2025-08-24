@@ -45,13 +45,41 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-provider";
 import ProtectedLayout from "../layout";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const purchaseSchema = z.object({
   date: z.date({ required_error: "A date is required." }),
-  product_id: z.string().min(1, "Please select a product."),
+  purchaseType: z.enum(["inventory", "adhoc"]),
+  product_id: z.string().optional(),
+  product_name: z.string().optional(),
+  selling_price: z.coerce.number().optional(),
   supplier_id: z.string().min(1, "Please select a supplier."),
   quantity: z.coerce.number().min(1, "Quantity must be at least 1."),
   total_cost: z.coerce.number().min(0.01, "Total cost must be greater than 0."),
+}).refine(data => {
+    if (data.purchaseType === 'inventory') {
+        return !!data.product_id;
+    }
+    return true;
+}, {
+    message: "Please select a product.",
+    path: ["product_id"],
+}).refine(data => {
+    if (data.purchaseType === 'adhoc') {
+        return !!data.product_name && data.product_name.length > 0;
+    }
+    return true;
+}, {
+    message: "Product name is required for new products.",
+    path: ["product_name"],
+}).refine(data => {
+    if (data.purchaseType === 'adhoc') {
+        return data.selling_price !== undefined && data.selling_price >= 0;
+    }
+    return true;
+}, {
+    message: "Selling price is required for new products.",
+    path: ["selling_price"],
 });
 
 function PurchasesPageContent() {
@@ -61,6 +89,20 @@ function PurchasesPageContent() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const { toast } = useToast();
   
+  const form = useForm<z.infer<typeof purchaseSchema>>({
+    resolver: zodResolver(purchaseSchema),
+    defaultValues: {
+      date: new Date(),
+      quantity: 1,
+      purchaseType: "inventory",
+      product_id: "",
+      supplier_id: "",
+      total_cost: 0,
+      product_name: "",
+      selling_price: 0,
+    },
+  });
+
   const fetchPurchases = React.useCallback(async () => {
     if (!user) return;
     const { data, error } = await supabase
@@ -105,28 +147,35 @@ function PurchasesPageContent() {
     fetchSuppliers();
   }, [fetchPurchases, fetchProducts, fetchSuppliers]);
 
-  const form = useForm<z.infer<typeof purchaseSchema>>({
-    resolver: zodResolver(purchaseSchema),
-    defaultValues: {
-      date: new Date(),
-      quantity: 1,
-      product_id: "",
-      supplier_id: "",
-      total_cost: 0
-    },
-  });
-
   async function onSubmit(values: z.infer<typeof purchaseSchema>) {
     if (!user) return;
+    
+    let rpcParams;
+    if (values.purchaseType === 'adhoc') {
+        rpcParams = {
+            p_product_id: null,
+            p_supplier_id: values.supplier_id,
+            p_quantity: values.quantity,
+            p_total_cost: values.total_cost,
+            p_date: values.date.toISOString(),
+            p_user_id: user.id,
+            p_product_name: values.product_name,
+            p_selling_price: values.selling_price
+        };
+    } else {
+        rpcParams = {
+            p_product_id: values.product_id,
+            p_supplier_id: values.supplier_id,
+            p_quantity: values.quantity,
+            p_total_cost: values.total_cost,
+            p_date: values.date.toISOString(),
+            p_user_id: user.id,
+            p_product_name: null,
+            p_selling_price: null
+        }
+    }
 
-    const { error } = await supabase.rpc('record_purchase', {
-        p_product_id: values.product_id,
-        p_supplier_id: values.supplier_id,
-        p_quantity: values.quantity,
-        p_total_cost: values.total_cost,
-        p_date: values.date.toISOString(),
-        p_user_id: user.id
-    });
+    const { error } = await supabase.rpc('record_purchase', rpcParams);
 
     if (error) {
       toast({ title: "Error logging purchase", description: error.message, variant: "destructive" });
@@ -140,9 +189,12 @@ function PurchasesPageContent() {
     form.reset({ 
       date: new Date(), 
       quantity: 1, 
+      purchaseType: "inventory",
       product_id: "",
       supplier_id: "",
-      total_cost: 0 
+      total_cost: 0,
+      product_name: "",
+      selling_price: 0,
     });
     fetchPurchases();
     fetchProducts();
@@ -177,6 +229,8 @@ function PurchasesPageContent() {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
   };
+  
+  const watchedPurchaseType = form.watch("purchaseType");
 
   return (
     <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -194,6 +248,42 @@ function PurchasesPageContent() {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                 <FormField
+                  control={form.control}
+                  name="purchaseType"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>Purchase Type</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={(value) => {
+                              field.onChange(value);
+                              form.setValue("product_id", "");
+                              form.setValue("product_name", "");
+                              form.setValue("selling_price", 0);
+                          }}
+                          defaultValue={field.value}
+                          className="flex space-x-4"
+                        >
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="inventory" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Inventory Product</FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="adhoc" />
+                            </FormControl>
+                            <FormLabel className="font-normal">New Product</FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
                 <FormField
                   control={form.control} name="date"
                   render={({ field }) => (
@@ -216,27 +306,61 @@ function PurchasesPageContent() {
                     </FormItem>
                   )}
                 />
-                <FormField control={form.control} name="product_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Product</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a product" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {products.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                
+                {watchedPurchaseType === 'inventory' ? (
+                    <FormField control={form.control} name="product_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Product</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a product" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {products.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                ) : (
+                    <>
+                        <FormField
+                            control={form.control}
+                            name="product_name"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>New Product Name</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="e.g., Organic Flour" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="selling_price"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Selling Price (per unit)</FormLabel>
+                                <FormControl>
+                                    <Input type="number" placeholder="5.99" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </>
+                )}
+
                 <FormField control={form.control} name="supplier_id"
                   render={({ field }) => (
                     <FormItem>
@@ -244,6 +368,7 @@ function PurchasesPageContent() {
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
