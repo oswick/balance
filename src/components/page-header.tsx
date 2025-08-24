@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Breadcrumbs } from "./breadcrumbs";
 
 interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string;
@@ -14,11 +15,12 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        "flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4",
+        "flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4",
         className
       )}
     >
-      <div className="grid gap-1">
+      <div className="grid gap-2">
+        <Breadcrumbs />
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
           {title}
         </h1>
