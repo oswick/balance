@@ -75,7 +75,7 @@ function InventoryPageContent() {
   async function onAddSubmit(values: z.infer<typeof productSchema>) {
     if (!user) return;
     
-    const cost_per_unit = values.purchase_price / values.quantity;
+    const cost_per_unit = values.quantity > 0 ? values.purchase_price / values.quantity : 0;
 
     const { error } = await supabase
       .from('products')

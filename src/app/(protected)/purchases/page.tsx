@@ -150,34 +150,19 @@ function PurchasesPageContent() {
   async function onSubmit(values: z.infer<typeof purchaseSchema>) {
     if (!user) return;
     
-    let rpcParams;
-    const cost_per_unit = values.total_cost / values.quantity;
+    const cost_per_unit = values.quantity > 0 ? values.total_cost / values.quantity : 0;
 
-    if (values.purchaseType === 'adhoc') {
-        rpcParams = {
-            p_product_id: null,
-            p_supplier_id: values.supplier_id,
-            p_quantity: values.quantity,
-            p_total_cost: values.total_cost,
-            p_date: values.date.toISOString(),
-            p_user_id: user.id,
-            p_product_name: values.product_name,
-            p_selling_price: values.selling_price,
-            p_cost_per_unit: cost_per_unit,
-        };
-    } else {
-        rpcParams = {
-            p_product_id: values.product_id,
-            p_supplier_id: values.supplier_id,
-            p_quantity: values.quantity,
-            p_total_cost: values.total_cost,
-            p_date: values.date.toISOString(),
-            p_user_id: user.id,
-            p_product_name: null,
-            p_selling_price: null,
-            p_cost_per_unit: cost_per_unit,
-        }
-    }
+    const rpcParams = {
+        p_product_id: values.purchaseType === 'inventory' ? values.product_id : null,
+        p_supplier_id: values.supplier_id,
+        p_quantity: values.quantity,
+        p_total_cost: values.total_cost,
+        p_date: values.date.toISOString(),
+        p_user_id: user.id,
+        p_product_name: values.purchaseType === 'adhoc' ? values.product_name : null,
+        p_selling_price: values.purchaseType === 'adhoc' ? values.selling_price : null,
+        p_cost_per_unit: cost_per_unit,
+    };
 
     const { error } = await supabase.rpc('record_purchase', rpcParams);
 

@@ -4,7 +4,7 @@ export interface Sale {
   id: string; 
   date: string;
   product_id: string | null; 
-  product_name?: string; 
+  product_name: string | null; 
   quantity: number;
   amount: number;
   user_id: string;
@@ -24,8 +24,8 @@ export interface Expense {
 export interface Product {
   id: string; 
   name: string;
-  purchase_price: number; // Represents the total cost of a purchase batch
-  cost_per_unit: number; // Calculated cost for a single unit
+  purchase_price: number; 
+  cost_per_unit: number; 
   selling_price: number;
   quantity: number;
   user_id: string;
@@ -35,11 +35,11 @@ export interface Product {
 export interface Purchase {
   id: string; 
   date: string;
-  product_id: string; 
+  product_id: string | null; 
   product_name?: string; // from join
   quantity: number;
   total_cost: number;
-  supplier_id: string; 
+  supplier_id: string | null; 
   supplier_name?: string; // from join
   user_id: string;
   created_at: string;
