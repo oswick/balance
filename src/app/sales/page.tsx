@@ -48,38 +48,24 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import ProtectedLayout from "../protected-layout";
 
 const salesSchema = z.object({
-  date: z.date({
-    required_error: "A date is required.",
-  }),
+  date: z.date({ required_error: "A date is required." }),
   saleType: z.enum(["inventory", "adhoc"]),
   product_id: z.string().optional(),
   product_name: z.string().optional(),
   price: z.coerce.number().optional(),
   quantity: z.coerce.number().min(1, "Quantity must be at least 1."),
-}).refine(data => {
-    if (data.saleType === 'inventory') {
-        return !!data.product_id;
-    }
-    return true;
-}, {
-    message: "Please select a product.",
-    path: ["product_id"],
-}).refine(data => {
-    if (data.saleType === 'adhoc') {
-        return !!data.product_name && data.product_name.length > 0;
-    }
-    return true;
-}, {
-    message: "Product name is required for ad-hoc sales.",
-    path: ["product_name"],
-}).refine(data => {
-    if (data.saleType === 'adhoc') {
-        return data.price !== undefined && data.price > 0;
-    }
-    return true;
-}, {
-    message: "Price must be greater than 0 for ad-hoc sales.",
-    path: ["price"],
+})
+.refine(data => data.saleType === "inventory" ? !!data.product_id : true, {
+  message: "Please select a product.",
+  path: ["product_id"],
+})
+.refine(data => data.saleType === "adhoc" ? !!data.product_name && data.product_name.length > 0 : true, {
+  message: "Product name is required for ad-hoc sales.",
+  path: ["product_name"],
+})
+.refine(data => data.saleType === "adhoc" ? data.price !== undefined && data.price > 0 : true, {
+  message: "Price must be greater than 0 for ad-hoc sales.",
+  path: ["price"],
 });
 
 export default function SalesPage() {
@@ -93,17 +79,17 @@ export default function SalesPage() {
     if (!user) return;
     const { data, error } = await supabase
       .from('sales')
-      .select(`
-        *,
-        products ( name )
-      `)
+      .select('*, products(name)')
       .eq('user_id', user.id)
       .order('date', { ascending: false });
 
     if (error) {
       toast({ title: "Error fetching sales", description: error.message, variant: "destructive" });
     } else {
-      const formattedData = data.map((d: any) => ({ ...d, product_name: d.products ? d.products.name : d.product_name }));
+      const formattedData = data.map((d: any) => ({
+        ...d,
+        product_name: d.products ? d.products.name : d.product_name,
+      }));
       setSales(formattedData as Sale[]);
     }
   }, [supabase, user, toast]);
@@ -139,7 +125,7 @@ export default function SalesPage() {
 
   async function onSubmit(values: z.infer<typeof salesSchema>) {
     if (!user) return;
-    
+
     let amount = 0;
     let productId = null;
     let productName = null;
@@ -157,75 +143,64 @@ export default function SalesPage() {
       amount = product.selling_price * values.quantity;
       productId = product.id;
       productName = product.name;
-    } else { // Ad-hoc sale
-      if(!values.price || !values.product_name) {
-        // This should be caught by schema validation, but as a safeguard.
-        toast({ title: "Error", description: "Product name and price are required for ad-hoc sales.", variant: "destructive" });
-        return;
-      }
+    } else {
+      if (!values.price || !values.product_name) return;
       amount = values.price * values.quantity;
       productName = values.product_name;
     }
 
     const { error } = await supabase.rpc('record_sale', {
-        p_product_id: productId,
-        p_quantity: values.quantity,
-        p_amount: amount,
-        p_date: values.date.toISOString(),
-        p_user_id: user.id,
-        p_product_name: productName,
-    })
-
-    if (error) {
-       toast({ title: "Error recording sale", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Success!", description: "Sale has been added." });
-      form.reset({
-        date: new Date(),
-        quantity: 1,
-        saleType: saleType,
-        product_id: "",
-        product_name: "",
-        price: 0,
-      });
-      fetchSales();
-      if(values.saleType === "inventory") fetchProducts();
-    }
-  }
-  
-  async function deleteSale(sale: Sale) {
-    if(!user) return;
-    const { error } = await supabase.rpc('delete_sale', {
-        p_sale_id: sale.id,
-        p_product_id: sale.product_id,
-        p_quantity: sale.quantity,
-        p_user_id: user.id,
-        p_product_name: sale.product_name,
+      p_product_id: productId,
+      p_quantity: values.quantity,
+      p_amount: amount,
+      p_date: values.date.toISOString(),
+      p_user_id: user.id,
+      p_product_name: productName,
     });
 
     if (error) {
-       toast({ title: "Error deleting sale", description: error.message, variant: "destructive" });
+      toast({ title: "Error recording sale", description: error.message, variant: "destructive" });
     } else {
-        toast({ title: "Sale Deleted", description: "The sale record has been removed.", variant: "destructive" });
-        fetchSales();
-        if(sale.product_id) fetchProducts();
+      toast({ title: "Success!", description: "Sale has been added." });
+      form.reset({ date: new Date(), quantity: 1, saleType: saleType, product_id: "", product_name: "", price: 0 });
+      fetchSales();
+      if (values.saleType === "inventory") fetchProducts();
     }
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
-  };
-  
+  async function deleteSale(sale: Sale) {
+    if (!user) return;
+    const { error } = await supabase.rpc('delete_sale', {
+      p_sale_id: sale.id,
+      p_product_id: sale.product_id,
+      p_quantity: sale.quantity,
+      p_user_id: user.id,
+      p_product_name: sale.product_name,
+    });
+
+    if (error) {
+      toast({ title: "Error deleting sale", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Sale Deleted", description: "The sale record has been removed.", variant: "destructive" });
+      fetchSales();
+      if (sale.product_id) fetchProducts();
+    }
+  }
+
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+
   const watchedSaleType = form.watch("saleType");
 
   return (
     <ProtectedLayout>
       <main className="flex-1 space-y-4 p-4 md:p-8 pt-6 animate-in">
-        <PageHeader
-          title="Daily Sales"
-          description="Record your total sales for each day."
-        />
+        <PageHeader title="Daily Sales" description="Record your total sales for each day." />
+
+        {/* Grid responsive */}
         <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+
+          {/* Form Card */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -236,6 +211,8 @@ export default function SalesPage() {
             <CardContent>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+
+                  {/* Date Picker */}
                   <FormField
                     control={form.control}
                     name="date"
@@ -246,15 +223,15 @@ export default function SalesPage() {
                           <PopoverTrigger asChild>
                             <FormControl>
                               <Button
-                                variant={"outline"}
-                                className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
+                                variant="outline"
+                                className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
                               >
                                 {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
+                          <PopoverContent className="w-[90vw] md:w-auto p-0" align="start">
                             <Calendar
                               mode="single"
                               selected={field.value}
@@ -269,6 +246,7 @@ export default function SalesPage() {
                     )}
                   />
 
+                  {/* Sale Type Radio */}
                   <FormField
                     control={form.control}
                     name="saleType"
@@ -279,7 +257,7 @@ export default function SalesPage() {
                           <RadioGroup
                             onValueChange={field.onChange}
                             defaultValue={field.value}
-                            className="flex space-x-4"
+                            className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4"
                           >
                             <FormItem className="flex items-center space-x-2 space-y-0">
                               <FormControl>
@@ -300,31 +278,32 @@ export default function SalesPage() {
                     )}
                   />
 
+                  {/* Conditional Fields */}
                   {watchedSaleType === "inventory" ? (
-                      <FormField
-                        control={form.control}
-                        name="product_id"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Product</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select a product from inventory" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {products.map((p) => (
-                                  <SelectItem key={p.id} value={p.id}>
-                                    {p.name} (Stock: {p.quantity})
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                    <FormField
+                      control={form.control}
+                      name="product_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Product</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a product from inventory" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {products.map((p) => (
+                                <SelectItem key={p.id} value={p.id}>
+                                  {p.name} (Stock: {p.quantity})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   ) : (
                     <>
                       <FormField
@@ -356,6 +335,7 @@ export default function SalesPage() {
                     </>
                   )}
 
+                  {/* Quantity */}
                   <FormField
                     control={form.control}
                     name="quantity"
@@ -369,21 +349,23 @@ export default function SalesPage() {
                       </FormItem>
                     )}
                   />
-                  
-                  <Button type="submit" className="w-full">
+
+                  <Button type="submit" className="w-full md:w-auto">
                     Add Sale
                   </Button>
                 </form>
               </Form>
             </CardContent>
           </Card>
+
+          {/* Table Card */}
           <Card>
             <CardHeader>
               <CardTitle>Sales History</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="max-h-[400px] overflow-auto">
-                <Table>
+              <div className="overflow-x-auto w-full max-h-[400px]">
+                <Table className="min-w-[500px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Date</TableHead>
