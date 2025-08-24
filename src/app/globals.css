@@ -127,6 +127,24 @@ body {
   }
 }
 
+/* Asegurar contraste correcto en botones */
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-primary-foreground;
+  }
+  
+  /* Forzar texto blanco en botones oscuros */
+  button[class*="bg-primary"]:not([class*="variant-"]),
+  .bg-primary {
+    color: white !important;
+  }
+  
+  /* Asegurar contraste en botones destructivos */
+  .bg-destructive {
+    color: white !important;
+  }
+}
+
 @layer utilities {
   .animate-in {
     animation-name: animate-in;
@@ -144,5 +162,66 @@ body {
       opacity: 1;
       transform: translateY(0);
     }
+  }
+  
+  /* Utilidades para texto en botones */
+  .text-button-primary {
+    color: white !important;
+  }
+  
+  .text-button-destructive {
+    color: white !important;
+  }
+}
+
+/* Prevenir saltos de layout */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Mejorar la transición entre páginas */
+main {
+  min-height: calc(100vh - 56px); /* 56px = altura del header */
+}
+
+/* Asegurar que el header sea consistente */
+header {
+  height: 56px; /* Altura fija */
+  min-height: 56px;
+}
+
+/* Prevenir movimientos del header durante navegación */
+@media (min-width: 768px) {
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Smooth transitions */
+* {
+  box-sizing: border-box;
+}
+
+/* Loading state improvements */
+.animate-in {
+  animation-name: animate-in;
+  animation-duration: 0.2s; /* Reducido para menos salto visual */
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes animate-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px); /* Reducido el movimiento */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

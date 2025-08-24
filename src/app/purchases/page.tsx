@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, PlusCircle, Pencil } from "lucide-react";
+import { Calendar as CalendarIcon, PlusCircle, Pencil, Package, DollarSign, User, Calendar as CalendarIcon2, Hash } from "lucide-react";
 import React, { useState, useEffect } from "react";
 
 import { Purchase, Product, Supplier } from "@/types";
@@ -203,14 +203,236 @@ export default function PurchasesPage() {
   const formatCurrency = (amount: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
   const watchedPurchaseType = form.watch("purchaseType");
 
+  // Mobile Purchase Card Component
+  const PurchaseCard = ({ purchase }: { purchase: Purchase }) => (
+    <Card className="mb-4">
+      <CardContent className="p-4">
+        <div className="flex justify-between items-start mb-3">
+          <div className="flex-1 mr-2">
+            <h3 className="font-semibold text-base truncate">{purchase.product_name}</h3>
+            <p className="text-sm text-muted-foreground">{format(new Date(purchase.date), "MMM d, yyyy")}</p>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setEditingPurchase(purchase)} 
+            title="Edit Purchase"
+            className="p-2 h-8 w-8 flex-shrink-0"
+          >
+            <Pencil className="h-3 w-3" />
+          </Button>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="flex items-center gap-2">
+            <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-muted-foreground text-xs">Supplier</p>
+              <p className="font-medium truncate">{purchase.supplier_name}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Hash className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <div>
+              <p className="text-muted-foreground text-xs">Quantity</p>
+              <p className="font-medium">{purchase.quantity}</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2 col-span-2">
+            <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <div>
+              <p className="text-muted-foreground text-xs">Total Cost</p>
+              <p className="font-medium text-lg">{formatCurrency(purchase.total_cost)}</p>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <ProtectedLayout>
-      <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <div className="space-y-4 p-4 pt-6">
         <PageHeader title="Product Purchases" description="Record product purchases, supplier, and cost details." />
 
-        <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
-          {/* --- FORM CARD --- */}
-          <Card className="lg:col-span-1">
+        {/* Mobile: Stacked Layout */}
+        <div className="space-y-6 lg:hidden">
+          {/* Form Card - Mobile */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <PlusCircle className="h-5 w-5" /> Log New Purchase
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  {/* Purchase Type */}
+                  <FormField control={form.control} name="purchaseType" render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel className="text-sm font-medium">Purchase Type</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            form.setValue("product_id", "");
+                            form.setValue("product_name", "");
+                            form.setValue("selling_price", 0);
+                          }}
+                          defaultValue={field.value}
+                          className="flex flex-col space-y-2"
+                        >
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl><RadioGroupItem value="inventory" /></FormControl>
+                            <FormLabel className="font-normal text-sm">Inventory Product</FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl><RadioGroupItem value="adhoc" /></FormControl>
+                            <FormLabel className="font-normal text-sm">New Product</FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  {/* Date */}
+                  <FormField control={form.control} name="date" render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel className="text-sm">Purchase Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button variant="outline" className={cn("w-full pl-3 text-left font-normal text-base", !field.value && "text-muted-foreground")}>
+                              {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[95vw] max-w-sm p-0" align="start">
+                          <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={d => d > new Date() || d < new Date("1900-01-01")} initialFocus />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  {/* Conditional Product Fields */}
+                  {watchedPurchaseType === "inventory" ? (
+                    <FormField control={form.control} name="product_id" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm">Product</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <FormControl>
+                            <SelectTrigger className="text-base">
+                              <SelectValue placeholder="Select a product" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {products.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  ) : (
+                    <div className="space-y-4">
+                      <FormField control={form.control} name="product_name" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm">New Product Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Organic Flour" {...field} className="text-base" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="selling_price" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm">Selling Price (per unit)</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="5.99" {...field} className="text-base" step="0.01" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
+                  )}
+
+                  {/* Supplier */}
+                  <FormField control={form.control} name="supplier_id" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm">Supplier</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger className="text-base">
+                            <SelectValue placeholder="Select a supplier" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  {/* Quantity & Total Cost */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField control={form.control} name="quantity" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm">Quantity</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="100" {...field} className="text-base" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="total_cost" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm">Total Cost</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="250.00" {...field} className="text-base" step="0.01" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </div>
+
+                  <Button type="submit" className="w-full">Log Purchase</Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+
+          {/* Purchase History - Mobile */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Purchase History</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              {purchases.length > 0 ? (
+                <div className="space-y-3">
+                  {purchases.map((purchase) => (
+                    <PurchaseCard key={purchase.id} purchase={purchase} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-10">
+                  <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No purchases logged yet.</p>
+                  <p className="text-sm text-muted-foreground mt-1">Start by logging your first purchase above.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Desktop: Original Grid Layout */}
+        <div className="hidden lg:grid gap-6 grid-cols-3">
+          {/* Form Card - Desktop */}
+          <Card className="col-span-1">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <PlusCircle className="h-5 w-5" /> Log New Purchase
@@ -219,7 +441,6 @@ export default function PurchasesPage() {
             <CardContent>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-
                   {/* Purchase Type */}
                   <FormField control={form.control} name="purchaseType" render={({ field }) => (
                     <FormItem className="space-y-2">
@@ -262,7 +483,7 @@ export default function PurchasesPage() {
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[90vw] md:w-auto p-0" align="start">
+                        <PopoverContent className="w-auto p-0" align="start">
                           <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={d => d > new Date() || d < new Date("1900-01-01")} initialFocus />
                         </PopoverContent>
                       </Popover>
@@ -333,14 +554,14 @@ export default function PurchasesPage() {
                     </FormItem>
                   )} />
 
-                  <Button type="submit" className="w-full md:w-auto">Log Purchase</Button>
+                  <Button type="submit" className="w-full">Log Purchase</Button>
                 </form>
               </Form>
             </CardContent>
           </Card>
 
-          {/* --- PURCHASE TABLE --- */}
-          <Card className="lg:col-span-2">
+          {/* Purchase Table - Desktop */}
+          <Card className="col-span-2">
             <CardHeader><CardTitle>Purchase History</CardTitle></CardHeader>
             <CardContent>
               <div className="overflow-x-auto max-h-[600px]">
@@ -381,29 +602,28 @@ export default function PurchasesPage() {
           </Card>
         </div>
 
-        {/* --- EDIT DIALOG --- */}
+        {/* Edit Dialog - Mobile Optimized */}
         <Dialog open={!!editingPurchase} onOpenChange={(isOpen) => !isOpen && setEditingPurchase(null)}>
-          <DialogContent>
+          <DialogContent className="w-[95vw] max-w-md mx-auto">
             <DialogHeader>
-              <DialogTitle>Edit Purchase</DialogTitle>
-              <DialogDescription>Update details. Editing does not affect stock levels.</DialogDescription>
+              <DialogTitle className="text-lg">Edit Purchase</DialogTitle>
+              <DialogDescription className="text-sm">Update details. Editing does not affect stock levels.</DialogDescription>
             </DialogHeader>
             <Form {...editForm}>
               <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
-
                 <FormField control={editForm.control} name="date" render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Purchase Date</FormLabel>
+                    <FormLabel className="text-sm">Purchase Date</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
-                          <Button variant="outline" className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                          <Button variant="outline" className={cn("w-full pl-3 text-left font-normal text-base", !field.value && "text-muted-foreground")}>
                             {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[90vw] md:w-auto p-0" align="start">
+                      <PopoverContent className="w-[90vw] max-w-sm p-0" align="start">
                         <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={d => d > new Date() || d < new Date("1900-01-01")} initialFocus />
                       </PopoverContent>
                     </Popover>
@@ -413,42 +633,48 @@ export default function PurchasesPage() {
 
                 <FormField control={editForm.control} name="supplier_id" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Supplier</FormLabel>
+                    <FormLabel className="text-sm">Supplier</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value || ""}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select a supplier" /></SelectTrigger></FormControl>
+                      <FormControl>
+                        <SelectTrigger className="text-base">
+                          <SelectValue placeholder="Select a supplier" />
+                        </SelectTrigger>
+                      </FormControl>
                       <SelectContent>{suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
                 )} />
 
-                <FormField control={editForm.control} name="quantity" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Quantity</FormLabel>
-                    <FormControl><Input type="number" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={editForm.control} name="quantity" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm">Quantity</FormLabel>
+                      <FormControl><Input type="number" {...field} className="text-base" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
 
-                <FormField control={editForm.control} name="total_cost" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Total Cost</FormLabel>
-                    <FormControl><Input type="number" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                  <FormField control={editForm.control} name="total_cost" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm">Total Cost</FormLabel>
+                      <FormControl><Input type="number" {...field} className="text-base" step="0.01" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
 
-                <DialogFooter>
+                <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 sm:justify-end pt-4">
                   <DialogClose asChild>
-                    <Button variant="secondary" type="button">Cancel</Button>
+                    <Button variant="secondary" type="button" className="w-full sm:w-auto">Cancel</Button>
                   </DialogClose>
-                  <Button type="submit">Save Changes</Button>
+                  <Button type="submit" className="w-full sm:w-auto">Save Changes</Button>
                 </DialogFooter>
               </form>
             </Form>
           </DialogContent>
         </Dialog>
-      </main>
+      </div>
     </ProtectedLayout>
   );
 }
