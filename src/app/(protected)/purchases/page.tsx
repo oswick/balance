@@ -45,7 +45,6 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-provider";
-import ProtectedLayout from "../layout";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Dialog,
@@ -100,7 +99,7 @@ const editPurchaseSchema = z.object({
     total_cost: z.coerce.number().min(0.01, "Total cost must be greater than 0."),
 });
 
-function PurchasesPageContent() {
+export default function PurchasesPage() {
   const { supabase, user } = useAuth();
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -570,14 +569,6 @@ function PurchasesPageContent() {
       </Dialog>
     </main>
   );
-}
-
-export default function PurchasesPage() {
-    return (
-        <ProtectedLayout>
-            <PurchasesPageContent />
-        </ProtectedLayout>
-    )
 }
     
 

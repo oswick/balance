@@ -37,7 +37,6 @@ import {
 } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-provider";
-import ProtectedLayout from "../layout";
 
 const expenseSchema = z.object({
   date: z.date({
@@ -50,7 +49,7 @@ const expenseSchema = z.object({
 
 type CombinedExpense = Expense & { isPurchase?: boolean, productName?: string };
 
-function ExpensesPageContent() {
+export default function ExpensesPage() {
   const { supabase, user } = useAuth();
   const [expenses, setExpenses] = useState<CombinedExpense[]>([]);
   const { toast } = useToast();
@@ -329,11 +328,4 @@ function ExpensesPageContent() {
     </main>
   );
 }
-
-export default function ExpensesPage() {
-    return (
-        <ProtectedLayout>
-            <ExpensesPageContent />
-        </ProtectedLayout>
-    )}
     

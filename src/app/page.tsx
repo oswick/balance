@@ -16,9 +16,8 @@ import {
   } from 'recharts';
 import { subDays, format, parseISO } from 'date-fns';
 import type { Sale } from "@/types";
-import ProtectedLayout from "./(protected)/layout";
 
-function HomePageContent() {
+export default function Home() {
   const { supabase, user } = useAuth();
   const { toast } = useToast();
   const [totalSales, setTotalSales] = useState(0);
@@ -193,13 +192,4 @@ function HomePageContent() {
     </div>
   );
 }
-
-export default function Home() {
-    return (
-        <ProtectedLayout>
-            <HomePageContent />
-        </ProtectedLayout>
-    )
-}
-
     

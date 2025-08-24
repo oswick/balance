@@ -45,7 +45,6 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-provider";
-import ProtectedLayout from "../layout";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const salesSchema = z.object({
@@ -83,7 +82,7 @@ const salesSchema = z.object({
     path: ["price"],
 });
 
-function SalesPageContent() {
+export default function SalesPage() {
   const { supabase, user } = useAuth();
   const [sales, setSales] = useState<Sale[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -426,13 +425,4 @@ function SalesPageContent() {
     </main>
   );
 }
-
-export default function SalesPage() {
-    return (
-        <ProtectedLayout>
-            <SalesPageContent />
-        </ProtectedLayout>
-    )
-}
-
     

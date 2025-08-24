@@ -29,7 +29,6 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-provider";
-import ProtectedLayout from "../layout";
 
 const supplierSchema = z.object({
   name: z.string().min(1, "Supplier name is required."),
@@ -37,7 +36,7 @@ const supplierSchema = z.object({
   purchase_days: z.string().min(1, "Purchase days are required."),
 });
 
-function SuppliersPageContent() {
+export default function SuppliersPage() {
   const { supabase, user } = useAuth();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const { toast } = useToast();
@@ -214,13 +213,4 @@ function SuppliersPageContent() {
     </main>
   );
 }
-
-export default function SuppliersPage() {
-    return (
-        <ProtectedLayout>
-            <SuppliersPageContent />
-        </ProtectedLayout>
-    )
-}
-
     

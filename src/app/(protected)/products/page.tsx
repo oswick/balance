@@ -38,7 +38,6 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-provider";
-import ProtectedLayout from "../layout";
 
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required."),
@@ -47,7 +46,7 @@ const productSchema = z.object({
   // purchase_price and cost_per_unit are not editable here, they are set on purchase/creation
 });
 
-function ProductsPageContent() {
+export default function ProductsPage() {
   const { supabase, user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -277,14 +276,6 @@ function ProductsPageContent() {
       </Dialog>
     </main>
   );
-}
-
-export default function ProductsPage() {
-    return (
-        <ProtectedLayout>
-            <ProductsPageContent />
-        </ProtectedLayout>
-    )
 }
     
     

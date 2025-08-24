@@ -12,9 +12,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/auth-provider";
 import { useToast } from "@/hooks/use-toast";
-import ProtectedLayout from "../layout";
 
-function SmartBuyPageContent() {
+export default function SmartBuyPage() {
   const { supabase, user } = useAuth();
   const { toast } = useToast();
   
@@ -154,12 +153,4 @@ function SmartBuyPageContent() {
       </Card>
     </main>
   );
-}
-
-export default function SmartBuyPage() {
-    return (
-        <ProtectedLayout>
-            <SmartBuyPageContent />
-        </ProtectedLayout>
-    )
 }

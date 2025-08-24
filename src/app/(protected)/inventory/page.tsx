@@ -29,7 +29,6 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-provider";
-import ProtectedLayout from "../layout";
 
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required."),
@@ -38,7 +37,7 @@ const productSchema = z.object({
   quantity: z.coerce.number().min(1, "Quantity must be at least 1."),
 });
 
-function InventoryPageContent() {
+export default function InventoryPage() {
   const { supabase, user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const { toast } = useToast();
@@ -255,14 +254,6 @@ function InventoryPageContent() {
       </div>
     </main>
   );
-}
-
-export default function InventoryPage() {
-    return (
-        <ProtectedLayout>
-            <InventoryPageContent />
-        </ProtectedLayout>
-    )
 }
     
     
