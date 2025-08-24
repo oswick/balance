@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-    { href: "/", label: "Dashboard" },
+    { href: "/dashboard", label: "Dashboard" },
     { href: "/sales", label: "Sales" },
     { href: "/purchases", label: "Purchases" },
     { href: "/expenses", label: "Expenses" },
@@ -39,7 +39,7 @@ export function Header() {
     <header className="sticky top-0 z-40 w-full border-b-2 border-border bg-background/95 backdrop-blur-sm">
       <div className="container flex h-14 items-center">
         <div className="mr-4 hidden md:flex">
-          <Link href="/" className="mr-6 flex items-center space-x-2">
+          <Link href="/dashboard" className="mr-6 flex items-center space-x-2">
             <Banknote className="h-6 w-6" />
             <span className="hidden font-bold sm:inline-block">
               BizBalance
@@ -65,7 +65,7 @@ export function Header() {
 
         {/* Mobile Menu */}
         <div className="flex flex-1 items-center justify-between space-x-2 md:hidden">
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="/dashboard" className="flex items-center space-x-2">
              <Banknote className="h-6 w-6" />
              <span className="font-bold">BizBalance</span>
           </Link>

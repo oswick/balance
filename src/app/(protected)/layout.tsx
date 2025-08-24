@@ -2,29 +2,20 @@
 
 import { useEffect } from 'react';
 import { useAuth } from '@/context/auth-provider';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import MainLayout from '@/components/layout/main-layout';
 import { Shortcuts } from '@/components/shortcuts';
 
 const ProtectedLayout = ({ children }: { children: React.ReactNode }) => {
     const { user, loading } = useAuth();
     const router = useRouter();
-    const pathname = usePathname();
 
     useEffect(() => {
-        if (loading) return; 
-
-        const isLoginPage = pathname.includes('/login');
-
-        if (!user && !isLoginPage) {
+        if (loading) return;
+        if (!user) {
             router.push('/login');
         }
-        
-        if (user && isLoginPage) {
-            router.push('/');
-        }
-
-    }, [user, loading, router, pathname]);
+    }, [user, loading, router]);
 
     if (loading) {
         return (
@@ -34,12 +25,12 @@ const ProtectedLayout = ({ children }: { children: React.ReactNode }) => {
         );
     }
     
-    if (pathname.includes('/login')) {
-      return <>{children}</>
-    }
-
     if(!user) {
-        return null;
+        return (
+             <div className="flex h-screen w-full items-center justify-center">
+                <div className="text-lg font-semibold">Redirecting to login...</div>
+            </div>
+        );
     }
 
     return (
