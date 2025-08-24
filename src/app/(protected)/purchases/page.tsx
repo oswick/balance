@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -190,7 +191,8 @@ function PurchasesPageContent() {
   }
 
   const deletePurchase = async (purchase: Purchase) => {
-    if(!user) return;
+    if(!user || !purchase.product_id) return;
+
     const { error } = await supabase.rpc('delete_purchase', {
         p_purchase_id: purchase.id,
         p_product_id: purchase.product_id,
@@ -199,11 +201,19 @@ function PurchasesPageContent() {
     });
     
     if (error) {
-       toast({
-        title: "Purchase Deletion Error",
-        description: error.message,
-        variant: "destructive",
-      });
+       if (error.message.includes("insufficient stock")) {
+            toast({
+                title: "Action Prohibited",
+                description: "Cannot delete purchase. The current stock is lower than the purchase quantity. Please reverse associated sales first.",
+                variant: "destructive",
+            });
+       } else {
+            toast({
+                title: "Purchase Deletion Error",
+                description: error.message,
+                variant: "destructive",
+            });
+       }
     } else {
       toast({
         title: "Purchase Deleted",
@@ -304,7 +314,7 @@ function PurchasesPageContent() {
                           <Select 
                             onValueChange={field.onChange}
                             defaultValue={field.value}
-                            value={field.value}
+                            value={field.value || ""}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -357,7 +367,7 @@ function PurchasesPageContent() {
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
-                        value={field.value}
+                        value={field.value || ""}
                       >
                         <FormControl>
                           <SelectTrigger>
