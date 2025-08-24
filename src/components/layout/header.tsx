@@ -38,13 +38,17 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 w-full border-b-2 border-border bg-background/95 backdrop-blur-sm">
       <div className="container flex h-14 items-center">
-        <div className="mr-4 hidden md:flex">
-          <Link href="/dashboard" className="mr-6 flex items-center space-x-2">
+        {/* Desktop View */}
+        <div className="hidden md:flex flex-1 items-center justify-between">
+          {/* Left: Logo */}
+          <Link href="/dashboard" className="flex items-center space-x-2">
             <Banknote className="h-6 w-6" />
-            <span className="hidden font-bold sm:inline-block">
-              BizBalance
+            <span className="font-bold">
+              Balance
             </span>
           </Link>
+
+          {/* Center: Navigation */}
           <nav className="flex items-center space-x-2 text-sm font-medium">
             {navItems.map((item) => (
               <Link
@@ -61,13 +65,21 @@ export function Header() {
               </Link>
             ))}
           </nav>
+
+          {/* Right: Logout */}
+          <div className="flex items-center">
+            <Button variant="ghost" onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4"/>
+                Logout
+            </Button>
+          </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile View */}
         <div className="flex flex-1 items-center justify-between space-x-2 md:hidden">
           <Link href="/dashboard" className="flex items-center space-x-2">
              <Banknote className="h-6 w-6" />
-             <span className="font-bold">BizBalance</span>
+             <span className="font-bold">Balance</span>
           </Link>
           <Button
             variant="ghost"
@@ -77,13 +89,6 @@ export function Header() {
             {isMobileMenuOpen ? <X/> : <Menu />}
             <span className="sr-only">Toggle Menu</span>
           </Button>
-        </div>
-        
-        <div className="flex flex-1 items-center justify-end space-x-4">
-            <Button variant="ghost" onClick={handleLogout} className="hidden md:inline-flex">
-                <LogOut className="mr-2 h-4 w-4"/>
-                Logout
-            </Button>
         </div>
       </div>
 
