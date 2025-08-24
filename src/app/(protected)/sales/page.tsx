@@ -201,6 +201,7 @@ function SalesPageContent() {
         p_product_id: sale.product_id,
         p_quantity: sale.quantity,
         p_user_id: user.id,
+        p_product_name: sale.product_name,
     });
 
     if (error) {
