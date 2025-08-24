@@ -176,7 +176,7 @@ function ExpensesPageContent() {
         title="Expense Tracking"
         description="Log your business expenses by category and date."
       />
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -336,3 +336,4 @@ export default function ExpensesPage() {
             <ExpensesPageContent />
         </ProtectedLayout>
     )}
+    

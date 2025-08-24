@@ -112,7 +112,7 @@ function SuppliersPageContent() {
         title="Supplier Management"
         description="Maintain supplier contacts, product types, and purchase days."
       />
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
         <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -222,3 +222,5 @@ export default function SuppliersPage() {
         </ProtectedLayout>
     )
 }
+
+    

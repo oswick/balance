@@ -21,7 +21,7 @@ export function PageHeader({
     >
       <div className="grid gap-2">
         <Breadcrumbs />
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+        <h1 className="text-2xl md:text-3xl font-black tracking-tight">
           {title}
         </h1>
         {description && (
@@ -32,3 +32,5 @@ export function PageHeader({
     </div>
   );
 }
+
+    
