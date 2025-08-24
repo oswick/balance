@@ -10,9 +10,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['monospace', 'sans-serif'],
-        headline: ['monospace', 'sans-serif'],
-        code: ['monospace'],
+        body: ["'Courier New'", 'monospace'],
+        headline: ["'Courier New'", 'monospace'],
+        code: ["'Courier New'", 'monospace'],
       },
       colors: {
         background: 'hsl(var(--background))',
@@ -68,8 +68,12 @@ export default {
       },
       borderRadius: {
         lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        md: 'calc(var(--radius) - 0px)',
+        sm: 'calc(var(--radius) - 0px)',
+      },
+      boxShadow: {
+        brutal: '4px 4px 0 hsl(var(--brutal-black))',
+        'brutal-sm': '2px 2px 0 hsl(var(--brutal-black))'
       },
       keyframes: {
         'accordion-down': {

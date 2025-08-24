@@ -93,8 +93,8 @@ function HomePageContent() {
   const profit = totalSales - totalExpenses;
 
   const kpiCards = [
-    { title: "Total Revenue", icon: DollarSign, value: formatCurrency(totalSales), description: "All sales recorded" },
-    { title: "Total Expenses", icon: Receipt, value: formatCurrency(totalExpenses), description: "All expenses recorded" },
+    { title: "Total Revenue", icon: DollarSign, value: formatCurrency(totalSales), description: "All sales recorded", color: 'text-green-500', borderColor: 'border-green-500' },
+    { title: "Total Expenses", icon: Receipt, value: formatCurrency(totalExpenses), description: "All expenses recorded", color: 'text-red-500', borderColor: 'border-red-500' },
     { title: "Net Profit", icon: Wallet, value: formatCurrency(profit), description: "Revenue minus expenses", isProfit: true },
     { title: "Profit Margin", icon: TrendingUp, value: totalSales > 0 ? `${((profit / totalSales) * 100).toFixed(2)}%` : '0.00%', description: "Net profit margin" },
   ];
@@ -102,20 +102,20 @@ function HomePageContent() {
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 animate-in">
       <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        <h2 className="text-3xl">Dashboard</h2>
       </div>
       <div className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {kpiCards.map((card, index) => (
-             <Card key={index} className="">
+             <Card key={index} className={cn(card.borderColor)}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
+                <CardTitle className="text-sm font-medium uppercase">
                   {card.title}
                 </CardTitle>
                 <card.icon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${card.isProfit && (profit >= 0 ? '' : 'text-destructive')}`}>
+                <div className={cn('text-2xl font-black', card.color, card.isProfit && (profit < 0 && 'text-red-500'))}>
                     {card.value}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -133,16 +133,16 @@ function HomePageContent() {
                 <CardContent className="pl-2">
                 <ResponsiveContainer width="100%" height={350}>
                     <BarChart data={salesLast7Days}>
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--foreground) / 0.2)" />
                     <XAxis
                         dataKey="name"
-                        stroke="#888888"
+                        stroke="hsl(var(--foreground))"
                         fontSize={12}
                         tickLine={false}
                         axisLine={false}
                     />
                     <YAxis
-                        stroke="#888888"
+                        stroke="hsl(var(--foreground))"
                         fontSize={12}
                         tickLine={false}
                         axisLine={false}
@@ -151,10 +151,12 @@ function HomePageContent() {
                     <Tooltip
                         contentStyle={{
                         backgroundColor: "hsl(var(--background))",
-                        border: "1px solid hsl(var(--border))",
+                        border: "2px solid hsl(var(--border))",
+                        boxShadow: "4px 4px 0 hsl(var(--brutal-black))"
                         }}
+                        cursor={{fill: 'hsl(var(--accent))'}}
                     />
-                    <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="total" fill="hsl(var(--primary))" radius={0} />
                     </BarChart>
                 </ResponsiveContainer>
                 </CardContent>
@@ -175,7 +177,7 @@ function HomePageContent() {
                             {format(parseISO(sale.date), 'MMMM d, yyyy')}
                         </p>
                         </div>
-                        <div className="ml-auto font-medium">
+                        <div className="ml-auto font-medium text-green-500">
                         +{formatCurrency(sale.amount)}
                         </div>
                     </div>

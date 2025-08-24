@@ -59,8 +59,8 @@ export function SidebarNav() {
     <>
       <SidebarHeader>
         <div className="flex items-center gap-2">
-            <Banknote className="w-6 h-6 text-primary" />
-            <span className="text-lg font-semibold text-primary group-data-[collapsible=icon]:hidden">BizBalance</span>
+            <Banknote className="w-6 h-6 text-primary-foreground" />
+            <span className="text-lg font-semibold text-primary-foreground group-data-[collapsible=icon]:hidden">BizBalance</span>
         </div>
       </SidebarHeader>
       <SidebarContent>
