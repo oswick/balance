@@ -28,26 +28,33 @@ export default function LoginPage() {
         redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
       },
     });
-    
+
     if (error) {
       console.error('Error during login:', error);
     }
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-background p-24">
-      <Card className="w-full max-w-sm">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4 md:p-24">
+      <Card className="w-full max-w-sm shadow-lg">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Login</CardTitle>
+          <CardTitle className="text-2xl md:text-3xl font-semibold">Login</CardTitle>
           <CardDescription>Sign in to your Balance account</CardDescription>
         </CardHeader>
-        <CardContent>
-          <Button onClick={handleGoogleLogin} className="w-full" variant="outline">
-            <GoogleIcon className="mr-2 h-4 w-4" />
+        <CardContent className="flex flex-col space-y-4">
+          <Button
+            onClick={handleGoogleLogin}
+            className="w-full flex items-center justify-center"
+            variant="outline"
+          >
+            <GoogleIcon className="mr-2 h-5 w-5" />
             Login with Google
           </Button>
         </CardContent>
       </Card>
+      <p className="mt-4 text-sm text-muted-foreground">
+        By logging in, you agree to our terms and privacy policy.
+      </p>
     </main>
   );
 }
