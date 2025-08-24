@@ -120,8 +120,8 @@ function PurchasesPageContent() {
     } else {
       const formattedData = data.map((d: any) => ({ 
         ...d, 
-        product_name: d.products.name,
-        supplier_name: d.suppliers.name,
+        product_name: d.products?.name || 'N/A',
+        supplier_name: d.suppliers?.name || 'N/A',
       }));
       setPurchases(formattedData as Purchase[]);
     }
@@ -151,6 +151,8 @@ function PurchasesPageContent() {
     if (!user) return;
     
     let rpcParams;
+    const cost_per_unit = values.total_cost / values.quantity;
+
     if (values.purchaseType === 'adhoc') {
         rpcParams = {
             p_product_id: null,
@@ -160,7 +162,8 @@ function PurchasesPageContent() {
             p_date: values.date.toISOString(),
             p_user_id: user.id,
             p_product_name: values.product_name,
-            p_selling_price: values.selling_price
+            p_selling_price: values.selling_price,
+            p_cost_per_unit: cost_per_unit,
         };
     } else {
         rpcParams = {
@@ -171,7 +174,8 @@ function PurchasesPageContent() {
             p_date: values.date.toISOString(),
             p_user_id: user.id,
             p_product_name: null,
-            p_selling_price: null
+            p_selling_price: null,
+            p_cost_per_unit: cost_per_unit,
         }
     }
 
@@ -397,7 +401,7 @@ function PurchasesPageContent() {
                 <FormField control={form.control} name="total_cost"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Total Cost</FormLabel>
+                      <FormLabel>Total Cost (for the whole quantity)</FormLabel>
                       <FormControl>
                         <Input type="number" placeholder="250.00" {...field} />
                       </FormControl>
@@ -463,3 +467,4 @@ export default function PurchasesPage() {
         </ProtectedLayout>
     )
 }
+    

@@ -35,7 +35,7 @@ const productSchema = z.object({
   name: z.string().min(1, "Product name is required."),
   purchase_price: z.coerce.number().min(0, "Purchase price cannot be negative."),
   selling_price: z.coerce.number().min(0, "Selling price cannot be negative."),
-  quantity: z.coerce.number().min(0, "Quantity cannot be negative."),
+  quantity: z.coerce.number().min(1, "Quantity must be at least 1."),
 });
 
 function InventoryPageContent() {
@@ -68,15 +68,18 @@ function InventoryPageContent() {
       name: "",
       purchase_price: 0,
       selling_price: 0,
-      quantity: 0,
+      quantity: 1,
     },
   });
 
   async function onAddSubmit(values: z.infer<typeof productSchema>) {
     if (!user) return;
+    
+    const cost_per_unit = values.purchase_price / values.quantity;
+
     const { error } = await supabase
       .from('products')
-      .insert([{ ...values, user_id: user.id }]);
+      .insert([{ ...values, user_id: user.id, cost_per_unit: cost_per_unit }]);
     
     if (error) {
       toast({ title: "Error adding product", description: error.message, variant: "destructive" });
@@ -89,7 +92,7 @@ function InventoryPageContent() {
         name: "",
         purchase_price: 0,
         selling_price: 0,
-        quantity: 0,
+        quantity: 1,
       });
       fetchProducts();
     }
@@ -154,9 +157,9 @@ function InventoryPageContent() {
                   name="purchase_price"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Purchase Price</FormLabel>
+                      <FormLabel>Total Purchase Price (for the whole quantity)</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="2.50" {...field} />
+                        <Input type="number" placeholder="3.50" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -167,9 +170,9 @@ function InventoryPageContent() {
                   name="selling_price"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Selling Price</FormLabel>
+                      <FormLabel>Selling Price (per unit)</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="5.00" {...field} />
+                        <Input type="number" placeholder="0.35" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -182,7 +185,7 @@ function InventoryPageContent() {
                     <FormItem>
                       <FormLabel>Initial Quantity</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="100" {...field} />
+                        <Input type="number" placeholder="12" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -205,7 +208,7 @@ function InventoryPageContent() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead>Purchase Price</TableHead>
+                    <TableHead>Cost per Unit</TableHead>
                     <TableHead>Selling Price</TableHead>
                     <TableHead>Quantity</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -219,7 +222,7 @@ function InventoryPageContent() {
                           {product.name}
                         </TableCell>
                         <TableCell>
-                          {formatCurrency(product.purchase_price)}
+                          {formatCurrency(product.cost_per_unit || 0)}
                         </TableCell>
                         <TableCell>
                           {formatCurrency(product.selling_price)}
@@ -261,3 +264,4 @@ export default function InventoryPage() {
         </ProtectedLayout>
     )
 }
+    

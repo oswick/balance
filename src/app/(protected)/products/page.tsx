@@ -42,9 +42,9 @@ import ProtectedLayout from "../layout";
 
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required."),
-  purchase_price: z.coerce.number().min(0, "Purchase price cannot be negative."),
   selling_price: z.coerce.number().min(0, "Selling price cannot be negative."),
   quantity: z.coerce.number().min(0, "Quantity cannot be negative."),
+  // purchase_price and cost_per_unit are not editable here, they are set on purchase/creation
 });
 
 function ProductsPageContent() {
@@ -80,7 +80,6 @@ function ProductsPageContent() {
     if (editingProduct) {
       editForm.reset({
         name: editingProduct.name,
-        purchase_price: editingProduct.purchase_price,
         selling_price: editingProduct.selling_price,
         quantity: editingProduct.quantity,
       });
@@ -125,14 +124,13 @@ function ProductsPageContent() {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 4,
     }).format(amount);
   };
   
   const calculateUnitProfit = (product: Product) => {
-      if (product.quantity > 0) {
-          return product.selling_price - (product.purchase_price / product.quantity);
-      }
-      return product.selling_price;
+      return product.selling_price - (product.cost_per_unit || 0);
   }
 
   return (
@@ -152,7 +150,7 @@ function ProductsPageContent() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead>Purchase Price</TableHead>
+                    <TableHead>Cost per Unit</TableHead>
                     <TableHead>Selling Price</TableHead>
                     <TableHead>Unit Profit</TableHead>
                     <TableHead>Quantity</TableHead>
@@ -167,12 +165,12 @@ function ProductsPageContent() {
                           {product.name}
                         </TableCell>
                         <TableCell>
-                          {formatCurrency(product.purchase_price)}
+                          {formatCurrency(product.cost_per_unit || 0)}
                         </TableCell>
                         <TableCell>
                           {formatCurrency(product.selling_price)}
                         </TableCell>
-                        <TableCell className="font-medium text-green-600">
+                        <TableCell className={`font-medium ${calculateUnitProfit(product) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                           {formatCurrency(calculateUnitProfit(product))}
                         </TableCell>
                         <TableCell>{product.quantity}</TableCell>
@@ -218,7 +216,7 @@ function ProductsPageContent() {
           <DialogHeader>
             <DialogTitle>Edit Product</DialogTitle>
             <DialogDescription>
-              Make changes to your product here. Click save when you're done.
+              Make changes to your product here. Click save when you're done. Cost per unit is not editable.
             </DialogDescription>
           </DialogHeader>
           <Form {...editForm}>
@@ -234,19 +232,6 @@ function ProductsPageContent() {
                     <FormLabel>Product Name</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g., Artisan Bread" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={editForm.control}
-                name="purchase_price"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Purchase Price</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="2.50" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -301,3 +286,4 @@ export default function ProductsPage() {
         </ProtectedLayout>
     )
 }
+    
