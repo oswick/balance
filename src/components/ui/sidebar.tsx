@@ -8,7 +8,6 @@ import { PanelLeft } from "lucide-react"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -18,6 +17,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
@@ -195,7 +196,7 @@ const SidebarInset = React.forwardRef<
     <main
       ref={ref}
       className={cn(
-        "flex-1 flex-col bg-background overflow-auto",
+        "flex-1 flex flex-col bg-background overflow-auto",
         className
       )}
       {...props}
@@ -365,7 +366,6 @@ export {
 // Keep other exports if they exist in the original file
 export {
     cva as sidebarMenuButtonVariants,
-    SidebarInput,
     Separator as SidebarSeparator,
     Skeleton as SidebarMenuSkeleton,
     Collapsible as SidebarGroup,
