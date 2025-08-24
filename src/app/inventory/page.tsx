@@ -46,13 +46,17 @@ export default function InventoryPage() {
   const fetchProducts = React.useCallback(async () => {
     if (!user) return;
     const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+      .from("products")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
 
     if (error) {
-      toast({ title: "Error fetching products", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error fetching products",
+        description: error.message,
+        variant: "destructive",
+      });
     } else {
       setProducts(data as Product[]);
     }
@@ -74,15 +78,20 @@ export default function InventoryPage() {
 
   async function onAddSubmit(values: z.infer<typeof productSchema>) {
     if (!user) return;
-    
-    const cost_per_unit = values.quantity > 0 ? values.purchase_price / values.quantity : 0;
+
+    const cost_per_unit =
+      values.quantity > 0 ? values.purchase_price / values.quantity : 0;
 
     const { error } = await supabase
-      .from('products')
-      .insert([{ ...values, user_id: user.id, cost_per_unit: cost_per_unit }]);
-    
+      .from("products")
+      .insert([{ ...values, user_id: user.id, cost_per_unit }]);
+
     if (error) {
-      toast({ title: "Error adding product", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error adding product",
+        description: error.message,
+        variant: "destructive",
+      });
     } else {
       toast({
         title: "Success!",
@@ -99,9 +108,13 @@ export default function InventoryPage() {
   }
 
   const deleteProduct = async (id: string) => {
-    const { error } = await supabase.from('products').delete().eq('id', id);
+    const { error } = await supabase.from("products").delete().eq("id", id);
     if (error) {
-      toast({ title: "Error deleting product", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error deleting product",
+        description: error.message,
+        variant: "destructive",
+      });
     } else {
       toast({
         title: "Product Deleted",
@@ -112,12 +125,11 @@ export default function InventoryPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
     }).format(amount);
-  };
 
   return (
     <ProtectedLayout>
@@ -127,6 +139,7 @@ export default function InventoryPage() {
           description="Add and manage products in your inventory."
         />
         <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+          {/* Formulario */}
           <Card className="lg:col-span-1">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -147,7 +160,11 @@ export default function InventoryPage() {
                       <FormItem>
                         <FormLabel>Product Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., Artisan Bread" {...field} />
+                          <Input
+                            placeholder="e.g., Artisan Bread"
+                            {...field}
+                            className="w-full"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -158,9 +175,16 @@ export default function InventoryPage() {
                     name="purchase_price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Total Purchase Price (for the whole quantity)</FormLabel>
+                        <FormLabel>
+                          Total Purchase Price (for the whole quantity)
+                        </FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="3.50" {...field} />
+                          <Input
+                            type="number"
+                            placeholder="3.50"
+                            {...field}
+                            className="w-full"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -173,7 +197,12 @@ export default function InventoryPage() {
                       <FormItem>
                         <FormLabel>Selling Price (per unit)</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="0.35" {...field} />
+                          <Input
+                            type="number"
+                            placeholder="0.35"
+                            {...field}
+                            className="w-full"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -186,7 +215,12 @@ export default function InventoryPage() {
                       <FormItem>
                         <FormLabel>Initial Quantity</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="12" {...field} />
+                          <Input
+                            type="number"
+                            placeholder="12"
+                            {...field}
+                            className="w-full"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -199,13 +233,15 @@ export default function InventoryPage() {
               </Form>
             </CardContent>
           </Card>
+
+          {/* Tabla */}
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Current Inventory</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="max-h-[480px] overflow-auto">
-                <Table>
+              <div className="overflow-x-auto max-h-[480px]">
+                <Table className="min-w-[600px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
