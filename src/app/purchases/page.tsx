@@ -123,21 +123,33 @@ export default function PurchasesPage() {
   }, [editingPurchase, editForm]);
 
   // --- FETCH DATA ---
-  const fetchPurchases = React.useCallback(async () => {
-    if (!user) return;
-    const { data, error } = await supabase
-      .from('purchases')
-      .select(`*, products(name), suppliers(name)`)
-      .eq('user_id', user.id)
-      .order('date', { ascending: false });
+// En tu archivo de purchases, reemplaza la función fetchPurchases con esto:
 
-    if (error) toast({ title: "Error fetching purchases", description: error.message, variant: "destructive" });
-    else setPurchases(data.map((d: any) => ({
+const fetchPurchases = React.useCallback(async () => {
+  if (!user) return;
+  const { data, error } = await supabase
+    .from('purchases')
+    .select(`
+      *,
+      products(name),
+      suppliers(name)
+    `)
+    .eq('user_id', user.id)
+    .order('date', { ascending: false });
+
+  if (error) {
+    toast({ title: "Error fetching purchases", description: error.message, variant: "destructive" });
+  } else {
+    setPurchases(data.map((d: any) => ({
       ...d,
-      product_name: d.products?.name || d.product_name || "N/A",
-      supplier_name: d.suppliers?.name || "N/A",
+      // Primero intenta obtener el nombre del producto desde la relación
+      // Si no existe (producto ad-hoc), usa el product_name almacenado
+      // Si tampoco existe, usa "Unknown Product" como fallback
+      product_name: d.products?.name || d.product_name || "Unknown Product",
+      supplier_name: d.suppliers?.name || "Unknown Supplier",
     })));
-  }, [supabase, user, toast]);
+  }
+}, [supabase, user, toast]);
 
   const fetchProducts = React.useCallback(async () => {
     if (!user) return;
