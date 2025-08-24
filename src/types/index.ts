@@ -1,6 +1,7 @@
 // src/types/index.ts - Updated to match database schema
 
 export interface Sale {
+  products: any;
   id: string; 
   date: string;
   product_id: string | null; 
