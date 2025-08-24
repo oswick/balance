@@ -4,8 +4,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
-import { useRouter, usePathname } from 'next-intl/navigation';
-import MainLayout from '@/components/layout/main-layout';
 
 type SupabaseContext = {
   supabase: SupabaseClient;
@@ -53,9 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   return (
     <Context.Provider value={value}>
-        <MainLayout>
-            {children}
-        </MainLayout>
+        {children}
     </Context.Provider>
   );
 }
