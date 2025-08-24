@@ -11,21 +11,21 @@ body {
     --brutal-black: 0 0% 0%;
     --brutal-white: 0 0% 100%;
     --brutal-red: 0 100% 50%;
-    --brutal-green: 120 100% 50%;
+    --brutal-green: 120 100% 25%;
     --brutal-yellow: 60 100% 50%;
     --brutal-gray: 0 0% 96%;
 
     --background: var(--brutal-gray);
     --foreground: var(--brutal-black);
     
-    --card: var(--brutal-white);
-    --card-foreground: var(--brutal-black);
+    --card: hsl(var(--brutal-white));
+    --card-foreground: hsl(var(--brutal-black));
     
-    --popover: var(--brutal-white);
-    --popover-foreground: var(--brutal-black);
+    --popover: hsl(var(--brutal-white));
+    --popover-foreground: hsl(var(--brutal-black));
     
     --primary: var(--brutal-black);
-    --primary-foreground: var(--brutal-white);
+    --primary-foreground: hsl(var(--brutal-white));
     
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
@@ -33,15 +33,15 @@ body {
     --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
     
-    --accent: var(--brutal-yellow);
-    --accent-foreground: var(--brutal-black);
+    --accent: hsl(var(--brutal-gray));
+    --accent-foreground: hsl(var(--brutal-black));
     
     --destructive: var(--brutal-red);
-    --destructive-foreground: var(--brutal-white);
+    --destructive-foreground: hsl(var(--brutal-white));
     
     --border: var(--brutal-black);
-    --input: var(--brutal-black);
-    --ring: var(--brutal-yellow);
+    --input: hsl(var(--brutal-black));
+    --ring: hsl(var(--brutal-black));
 
     --radius: 0rem;
     
@@ -58,28 +58,28 @@ body {
     --sidebar-accent: hsl(var(--brutal-gray));
     --sidebar-accent-foreground: hsl(var(--brutal-black));
     --sidebar-border: hsl(var(--brutal-white));
-    --sidebar-ring: hsl(var(--brutal-yellow));
+    --sidebar-ring: hsl(var(--brutal-black));
   }
 
   .dark {
     --brutal-black: 0 0% 0%;
     --brutal-white: 0 0% 100%;
     --brutal-red: 0 100% 50%;
-    --brutal-green: 120 100% 50%;
+    --brutal-green: 120 100% 25%;
     --brutal-yellow: 60 100% 50%;
     --brutal-gray: 0 0% 10%;
     
     --background: var(--brutal-black);
     --foreground: var(--brutal-white);
 
-    --card: var(--brutal-gray);
-    --card-foreground: var(--brutal-white);
+    --card: hsl(var(--brutal-gray));
+    --card-foreground: hsl(var(--brutal-white));
     
-    --popover: var(--brutal-black);
-    --popover-foreground: var(--brutal-white);
+    --popover: hsl(var(--brutal-black));
+    --popover-foreground: hsl(var(--brutal-white));
     
-    --primary: var(--brutal-white);
-    --primary-foreground: var(--brutal-black);
+    --primary: hsl(var(--brutal-white));
+    --primary-foreground: hsl(var(--brutal-black));
     
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 240 5.9% 98%;
@@ -87,15 +87,15 @@ body {
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
 
-    --accent: var(--brutal-yellow);
-    --accent-foreground: var(--brutal-black);
+    --accent: hsl(var(--brutal-gray));
+    --accent-foreground: hsl(var(--brutal-white));
 
     --destructive: var(--brutal-red);
-    --destructive-foreground: var(--brutal-white);
+    --destructive-foreground: hsl(var(--brutal-white));
 
-    --border: var(--brutal-white);
-    --input: var(--brutal-white);
-    --ring: var(--brutal-yellow);
+    --border: hsl(var(--brutal-white));
+    --input: hsl(var(--brutal-white));
+    --ring: hsl(var(--brutal-white));
     
     --chart-1: hsl(var(--brutal-white));
     --chart-2: hsl(var(--brutal-white) / 0.8);
@@ -108,9 +108,9 @@ body {
     --sidebar-primary: hsl(var(--brutal-white));
     --sidebar-primary-foreground: hsl(var(--brutal-black));
     --sidebar-accent: hsl(var(--brutal-gray));
-    --sidebar-accent-foreground: hsl(var(--brutal-white));
+    --sidebar-accent-foreground: hsl(var(--brutal-black));
     --sidebar-border: hsl(var(--brutal-white));
-    --sidebar-ring: hsl(var(--brutal-yellow));
+    --sidebar-ring: hsl(var(--brutal-white));
   }
 }
 

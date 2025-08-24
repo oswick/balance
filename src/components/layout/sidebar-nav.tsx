@@ -26,6 +26,9 @@ import {
   Archive,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-provider";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const analyticsGroup = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -55,79 +58,53 @@ export function SidebarNav() {
     router.push('/login');
   };
 
+  const NavGroup = ({ label, items }: { label: string, items: typeof analyticsGroup }) => (
+     <Collapsible defaultOpen className="group/collapsible">
+        <CollapsibleTrigger className="group flex w-full items-center justify-between p-2 text-sm font-bold uppercase text-sidebar-foreground/70 hover:text-sidebar-foreground">
+           <span>{label}</span>
+           <ChevronRight className="h-4 w-4 transform transition-transform duration-200 group-data-[state=open]:rotate-90" />
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+            <SidebarMenu className="pl-2">
+            {items.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={pathname === item.href}
+                        tooltip={item.label}
+                        className="uppercase font-bold"
+                    >
+                    <Link href={item.href}>
+                        <item.icon />
+                        <span>{item.label}</span>
+                    </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            ))}
+            </SidebarMenu>
+        </CollapsibleContent>
+    </Collapsible>
+  )
+
   return (
     <>
       <SidebarHeader>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 p-2">
             <Banknote className="w-6 h-6 text-primary-foreground" />
-            <span className="text-lg font-semibold text-primary-foreground group-data-[collapsible=icon]:hidden">BizBalance</span>
+            <span className="text-lg font-black uppercase text-primary-foreground group-data-[collapsible=icon]:hidden">BizBalance</span>
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarMenu>
-          <SidebarGroup>
-              <SidebarGroupLabel>Analytics</SidebarGroupLabel>
-              <SidebarGroupContent>
-                 {analyticsGroup.map((item) => (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={pathname === item.href}
-                      tooltip={item.label}
-                    >
-                      <Link href={item.href}>
-                        <item.icon />
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarGroupContent>
-          </SidebarGroup>
-           <SidebarGroup>
-              <SidebarGroupLabel>Operations</SidebarGroupLabel>
-              <SidebarGroupContent>
-                 {operationsGroup.map((item) => (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={pathname === item.href}
-                      tooltip={item.label}
-                    >
-                      <Link href={item.href}>
-                        <item.icon />
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarGroupContent>
-          </SidebarGroup>
-           <SidebarGroup>
-              <SidebarGroupLabel>Management</SidebarGroupLabel>
-              <SidebarGroupContent>
-                 {managementGroup.map((item) => (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={pathname === item.href}
-                      tooltip={item.label}
-                    >
-                      <Link href={item.href}>
-                        <item.icon />
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarMenu>
+        <div className="flex flex-col gap-2">
+          <NavGroup label="Analytics" items={analyticsGroup} />
+          <NavGroup label="Operations" items={operationsGroup} />
+          <NavGroup label="Management" items={managementGroup} />
+        </div>
       </SidebarContent>
        <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleLogout} tooltip="Logout">
+            <SidebarMenuButton onClick={handleLogout} tooltip="Logout" className="uppercase font-bold">
               <LogOut />
               <span>Logout</span>
             </SidebarMenuButton>
