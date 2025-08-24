@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -39,7 +38,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-provider";
 import ProtectedLayout from "../layout";
-import { useTranslations } from "next-intl";
 
 const expenseSchema = z.object({
   date: z.date({
@@ -56,7 +54,6 @@ function ExpensesPageContent() {
   const { supabase, user } = useAuth();
   const [expenses, setExpenses] = useState<CombinedExpense[]>([]);
   const { toast } = useToast();
-  const t = useTranslations('Expenses');
 
   const fetchExpensesAndPurchases = React.useCallback(async () => {
     if (!user) return;
@@ -68,7 +65,7 @@ function ExpensesPageContent() {
       .eq('user_id', user.id);
 
     if (expensesError) {
-      toast({ title: t('errors.fetchExpenses'), description: expensesError.message, variant: "destructive" });
+      toast({ title: "Error fetching expenses", description: expensesError.message, variant: "destructive" });
       return;
     }
 
@@ -79,7 +76,7 @@ function ExpensesPageContent() {
       .eq('user_id', user.id);
       
     if (purchasesError) {
-      toast({ title: t('errors.fetchPurchases'), description: purchasesError.message, variant: "destructive" });
+      toast({ title: "Error fetching purchases", description: purchasesError.message, variant: "destructive" });
       return;
     }
 
@@ -89,8 +86,8 @@ function ExpensesPageContent() {
       ...(purchasesData || []).map((p: any) => ({
         id: p.id,
         date: p.date,
-        category: t('purchaseCategory'),
-        description: `${t('purchaseOf')} ${p.products.name}`,
+        category: "Product Purchase",
+        description: `Purchase of ${p.products.name}`,
         amount: p.total_cost,
         user_id: p.user_id,
         created_at: p.created_at,
@@ -104,8 +101,7 @@ function ExpensesPageContent() {
 
     setExpenses(combined);
 
-  }, [supabase, user, toast, t]);
-
+  }, [supabase, user, toast]);
 
   useEffect(() => {
     fetchExpensesAndPurchases();
@@ -133,11 +129,11 @@ function ExpensesPageContent() {
     const { error } = await supabase.from('expenses').insert([newExpense]);
     
     if (error) {
-      toast({ title: t('errors.add'), description: error.message, variant: "destructive" });
+      toast({ title: "Error adding expense", description: error.message, variant: "destructive" });
     } else {
       toast({
-        title: t('success.addTitle'),
-        description: t('success.addDesc'),
+        title: "Success!",
+        description: "Expense has been added.",
       });
       form.reset({
         date: new Date(),
@@ -153,14 +149,14 @@ function ExpensesPageContent() {
     const { error } = await supabase.from('expenses').delete().eq('id', id);
     if(error) {
        toast({
-        title: t('errors.delete'),
+        title: "Error Deleting Expense",
         description: error.message,
         variant: "destructive",
       })
     } else {
       toast({
-        title: t('success.deleteTitle'),
-        description: t('success.deleteDesc'),
+        title: "Expense Deleted",
+        description: "The expense record has been removed.",
         variant: "destructive",
       })
       fetchExpensesAndPurchases();
@@ -177,15 +173,15 @@ function ExpensesPageContent() {
   return (
     <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <PageHeader
-        title={t('title')}
-        description={t('description')}
+        title="Expense Tracking"
+        description="Log your business expenses by category and date."
       />
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PlusCircle className="h-5 w-5" />
-              {t('addForm.title')}
+              Add New Expense
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -196,7 +192,7 @@ function ExpensesPageContent() {
                   name="date"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>{t('addForm.date')}</FormLabel>
+                      <FormLabel>Date of Expense</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -210,7 +206,7 @@ function ExpensesPageContent() {
                               {field.value ? (
                                 format(field.value, "PPP")
                               ) : (
-                                <span>{t('addForm.pickDate')}</span>
+                                <span>Pick a date</span>
                               )}
                               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
@@ -237,9 +233,9 @@ function ExpensesPageContent() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('addForm.description')}</FormLabel>
+                      <FormLabel>Description</FormLabel>
                       <FormControl>
-                        <Input placeholder={t('addForm.descriptionPlaceholder')} {...field} />
+                        <Input placeholder="e.g., Office rent" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -250,9 +246,9 @@ function ExpensesPageContent() {
                   name="category"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('addForm.category')}</FormLabel>
+                      <FormLabel>Category</FormLabel>
                       <FormControl>
-                        <Input placeholder={t('addForm.categoryPlaceholder')} {...field} />
+                        <Input placeholder="e.g., Utilities" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -263,7 +259,7 @@ function ExpensesPageContent() {
                   name="amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('addForm.amount')}</FormLabel>
+                      <FormLabel>Amount</FormLabel>
                       <FormControl>
                         <Input type="number" placeholder="250.00" {...field} />
                       </FormControl>
@@ -272,7 +268,7 @@ function ExpensesPageContent() {
                   )}
                 />
                 <Button type="submit" className="w-full">
-                  {t('addForm.submit')}
+                  Add Expense
                 </Button>
               </form>
             </Form>
@@ -280,18 +276,18 @@ function ExpensesPageContent() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>{t('history.title')}</CardTitle>
+            <CardTitle>Expense History</CardTitle>
           </CardHeader>
           <CardContent>
              <div className="max-h-[480px] overflow-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('history.date')}</TableHead>
-                    <TableHead>{t('history.description')}</TableHead>
-                    <TableHead>{t('history.category')}</TableHead>
-                    <TableHead className="text-right">{t('history.amount')}</TableHead>
-                    <TableHead className="text-right">{t('history.actions')}</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -310,7 +306,7 @@ function ExpensesPageContent() {
                               size="icon" 
                               onClick={() => deleteExpense(expense.id)}
                               disabled={expense.isPurchase}
-                              title={expense.isPurchase ? t('history.deleteDisabled') : t('history.deleteTooltip')}
+                              title={expense.isPurchase ? "Cannot delete purchases from here" : "Delete expense"}
                             >
                               <Trash2 className={`h-4 w-4 ${!expense.isPurchase && 'text-destructive'}`} />
                             </Button>
@@ -320,7 +316,7 @@ function ExpensesPageContent() {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center py-10">
-                        {t('history.noData')}
+                        No expenses recorded yet.
                       </TableCell>
                     </TableRow>
                   )}
@@ -334,11 +330,9 @@ function ExpensesPageContent() {
   );
 }
 
-
 export default function ExpensesPage() {
     return (
         <ProtectedLayout>
             <ExpensesPageContent />
         </ProtectedLayout>
-    )
-}
+    )}

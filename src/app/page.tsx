@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -18,7 +17,6 @@ import {
 import { subDays, format, parseISO } from 'date-fns';
 import type { Sale } from "@/types";
 import ProtectedLayout from "./(protected)/layout";
-
 
 function HomePageContent() {
   const { supabase, user } = useAuth();
@@ -91,7 +89,6 @@ function HomePageContent() {
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
-
 
   const profit = totalSales - totalExpenses;
 
