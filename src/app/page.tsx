@@ -107,7 +107,7 @@ function HomePageContent() {
       <div className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {kpiCards.map((card, index) => (
-             <Card key={index} className={cn(card.borderColor)}>
+             <Card key={index} className={card.borderColor}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium uppercase">
                   {card.title}
@@ -115,7 +115,7 @@ function HomePageContent() {
                 <card.icon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className={cn('text-2xl font-black', card.color, card.isProfit && (profit < 0 && 'text-red-500'))}>
+                <div className={`text-2xl font-black ${card.isProfit && profit >= 0 ? 'text-green-500' : card.isProfit && profit < 0 ? 'text-red-500' : card.color}`}>
                     {card.value}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -156,7 +156,7 @@ function HomePageContent() {
                         }}
                         cursor={{fill: 'hsl(var(--accent))'}}
                     />
-                    <Bar dataKey="total" fill="hsl(var(--primary))" radius={0} />
+                    <Bar dataKey="total" fill="hsl(var(--brutal-black))" radius={0} />
                     </BarChart>
                 </ResponsiveContainer>
                 </CardContent>
