@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -46,7 +45,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-provider";
 import ProtectedLayout from "../layout";
-import { useTranslations } from "next-intl";
 
 const purchaseSchema = z.object({
   date: z.date({ required_error: "A date is required." }),
@@ -56,14 +54,12 @@ const purchaseSchema = z.object({
   total_cost: z.coerce.number().min(0.01, "Total cost must be greater than 0."),
 });
 
-
 function PurchasesPageContent() {
   const { supabase, user } = useAuth();
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const { toast } = useToast();
-  const t = useTranslations("Purchases");
   
   const fetchPurchases = React.useCallback(async () => {
     if (!user) return;
@@ -78,7 +74,7 @@ function PurchasesPageContent() {
       .order('date', { ascending: false });
 
     if (error) {
-      toast({ title: t('errors.fetchPurchases'), description: error.message, variant: "destructive" });
+      toast({ title: "Error fetching purchases", description: error.message, variant: "destructive" });
     } else {
       const formattedData = data.map((d: any) => ({ 
         ...d, 
@@ -87,21 +83,21 @@ function PurchasesPageContent() {
       }));
       setPurchases(formattedData as Purchase[]);
     }
-  }, [supabase, user, toast, t]);
+  }, [supabase, user, toast]);
 
   const fetchProducts = React.useCallback(async () => {
     if (!user) return;
     const { data, error } = await supabase.from('products').select('*').eq('user_id', user.id);
-    if(error) toast({ title: t('errors.fetchProducts'), description: error.message, variant: "destructive" });
+    if(error) toast({ title: "Error fetching products", description: error.message, variant: "destructive" });
     else setProducts(data as Product[]);
-  }, [supabase, user, toast, t]);
+  }, [supabase, user, toast]);
 
   const fetchSuppliers = React.useCallback(async () => {
     if (!user) return;
     const { data, error } = await supabase.from('suppliers').select('*').eq('user_id', user.id);
-    if(error) toast({ title: t('errors.fetchSuppliers'), description: error.message, variant: "destructive" });
+    if(error) toast({ title: "Error fetching suppliers", description: error.message, variant: "destructive" });
     else setSuppliers(data as Supplier[]);
-  }, [supabase, user, toast, t]);
+  }, [supabase, user, toast]);
 
   useEffect(() => {
     fetchPurchases();
@@ -133,13 +129,13 @@ function PurchasesPageContent() {
     });
 
     if (error) {
-      toast({ title: t('errors.add'), description: error.message, variant: "destructive" });
+      toast({ title: "Error logging purchase", description: error.message, variant: "destructive" });
       return;
     }
 
     toast({
-      title: t('success.addTitle'),
-      description: t('success.addDesc'),
+      title: "Success!",
+      description: "Product purchase has been logged.",
     });
     form.reset({ 
       date: new Date(), 
@@ -149,7 +145,7 @@ function PurchasesPageContent() {
       total_cost: 0 
     });
     fetchPurchases();
-    fetchProducts(); // Refetch products to update stock
+    fetchProducts();
   }
 
   const deletePurchase = async (purchase: Purchase) => {
@@ -163,18 +159,18 @@ function PurchasesPageContent() {
     
     if (error) {
        toast({
-        title: t('errors.delete'),
+        title: "Purchase Deletion Error",
         description: error.message,
         variant: "destructive",
       });
     } else {
       toast({
-        title: t('success.deleteTitle'),
-        description: t('success.deleteDesc'),
+        title: "Purchase Deleted",
+        description: "The purchase record has been removed.",
         variant: "destructive",
       });
       fetchPurchases();
-      fetchProducts(); // Refetch products to update stock
+      fetchProducts();
     }
   };
 
@@ -185,14 +181,14 @@ function PurchasesPageContent() {
   return (
     <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <PageHeader
-        title={t('title')}
-        description={t('description')}
+        title="Product Purchases"
+        description="Record product purchases, supplier, and cost details."
       />
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <PlusCircle className="h-5 w-5" /> {t('addForm.title')}
+              <PlusCircle className="h-5 w-5" /> Log New Purchase
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -202,12 +198,12 @@ function PurchasesPageContent() {
                   control={form.control} name="date"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>{t('addForm.date')}</FormLabel>
+                      <FormLabel>Purchase Date</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
                             <Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
-                              {field.value ? format(field.value, "PPP") : <span>{t('addForm.pickDate')}</span>}
+                              {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
                           </FormControl>
@@ -223,14 +219,14 @@ function PurchasesPageContent() {
                 <FormField control={form.control} name="product_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('addForm.product')}</FormLabel>
+                      <FormLabel>Product</FormLabel>
                       <Select 
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={t('addForm.productPlaceholder')} />
+                            <SelectValue placeholder="Select a product" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -244,14 +240,14 @@ function PurchasesPageContent() {
                 <FormField control={form.control} name="supplier_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('addForm.supplier')}</FormLabel>
+                      <FormLabel>Supplier</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={t('addForm.supplierPlaceholder')} />
+                            <SelectValue placeholder="Select a supplier" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -265,7 +261,7 @@ function PurchasesPageContent() {
                 <FormField control={form.control} name="quantity"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('addForm.quantity')}</FormLabel>
+                      <FormLabel>Quantity</FormLabel>
                       <FormControl>
                         <Input type="number" placeholder="100" {...field} />
                       </FormControl>
@@ -276,7 +272,7 @@ function PurchasesPageContent() {
                 <FormField control={form.control} name="total_cost"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('addForm.totalCost')}</FormLabel>
+                      <FormLabel>Total Cost</FormLabel>
                       <FormControl>
                         <Input type="number" placeholder="250.00" {...field} />
                       </FormControl>
@@ -284,24 +280,24 @@ function PurchasesPageContent() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full">{t('addForm.submit')}</Button>
+                <Button type="submit" className="w-full">Log Purchase</Button>
               </form>
             </Form>
           </CardContent>
         </Card>
         <Card className="lg:col-span-2">
-          <CardHeader><CardTitle>{t('history.title')}</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Purchase History</CardTitle></CardHeader>
           <CardContent>
             <div className="max-h-[560px] overflow-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('history.date')}</TableHead>
-                    <TableHead>{t('history.product')}</TableHead>
-                    <TableHead>{t('history.supplier')}</TableHead>
-                    <TableHead>{t('history.quantity')}</TableHead>
-                    <TableHead className="text-right">{t('history.totalCost')}</TableHead>
-                    <TableHead className="text-right">{t('history.actions')}</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Supplier</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead className="text-right">Total Cost</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -314,7 +310,7 @@ function PurchasesPageContent() {
                         <TableCell>{purchase.quantity}</TableCell>
                         <TableCell className="text-right">{formatCurrency(purchase.total_cost)}</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => deletePurchase(purchase)} title={t('history.deleteTooltip')}>
+                          <Button variant="ghost" size="icon" onClick={() => deletePurchase(purchase)} title="Delete Purchase">
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </TableCell>
@@ -322,7 +318,7 @@ function PurchasesPageContent() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-10">{t('history.noData')}</TableCell>
+                      <TableCell colSpan={6} className="text-center py-10">No purchases logged yet.</TableCell>
                     </TableRow>
                   )}
                 </TableBody>

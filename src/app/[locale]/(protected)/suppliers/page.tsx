@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -6,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { PlusCircle, Trash2 } from "lucide-react";
 import React, { useState, useEffect } from "react";
-
 
 import { Supplier } from "@/types";
 import { PageHeader } from "@/components/page-header";
@@ -32,7 +30,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-provider";
 import ProtectedLayout from "../layout";
-import { useTranslations } from "next-intl";
 
 const supplierSchema = z.object({
   name: z.string().min(1, "Supplier name is required."),
@@ -44,7 +41,6 @@ function SuppliersPageContent() {
   const { supabase, user } = useAuth();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const { toast } = useToast();
-  const t = useTranslations("Suppliers");
 
   const fetchSuppliers = React.useCallback(async () => {
     if (!user) return;
@@ -55,11 +51,11 @@ function SuppliersPageContent() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      toast({ title: t('errors.fetch'), description: error.message, variant: "destructive" });
+      toast({ title: "Error fetching suppliers", description: error.message, variant: "destructive" });
     } else {
       setSuppliers(data as Supplier[]);
     }
-  }, [supabase, user, toast, t]);
+  }, [supabase, user, toast]);
 
   useEffect(() => {
     fetchSuppliers();
@@ -81,11 +77,11 @@ function SuppliersPageContent() {
     const { error } = await supabase.from('suppliers').insert([newSupplier]);
 
     if(error){
-      toast({ title: t('errors.add'), description: error.message, variant: "destructive" });
+      toast({ title: "Error adding supplier", description: error.message, variant: "destructive" });
     } else {
       toast({
-        title: t('success.addTitle'),
-        description: t('success.addDesc'),
+        title: "Success!",
+        description: "Supplier has been added.",
       });
       form.reset({
         name: "",
@@ -99,11 +95,11 @@ function SuppliersPageContent() {
   const deleteSupplier = async (id: string) => {
     const { error } = await supabase.from('suppliers').delete().eq('id', id);
     if(error){
-      toast({ title: t('errors.delete'), description: error.message, variant: "destructive" });
+      toast({ title: "Error deleting supplier", description: error.message, variant: "destructive" });
     } else {
       toast({
-        title: t('success.deleteTitle'),
-        description: t('success.deleteDesc'),
+        title: "Supplier Deleted",
+        description: "The supplier record has been removed.",
         variant: "destructive",
       })
       fetchSuppliers();
@@ -113,15 +109,15 @@ function SuppliersPageContent() {
   return (
     <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <PageHeader
-        title={t('title')}
-        description={t('description')}
+        title="Supplier Management"
+        description="Maintain supplier contacts, product types, and purchase days."
       />
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PlusCircle className="h-5 w-5" />
-              {t('addForm.title')}
+              Add New Supplier
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -132,9 +128,9 @@ function SuppliersPageContent() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('addForm.name')}</FormLabel>
+                      <FormLabel>Supplier Name</FormLabel>
                       <FormControl>
-                        <Input placeholder={t('addForm.namePlaceholder')} {...field} />
+                        <Input placeholder="e.g., City Bakers Co." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -145,9 +141,9 @@ function SuppliersPageContent() {
                   name="product_types"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('addForm.productTypes')}</FormLabel>
+                      <FormLabel>Product Types</FormLabel>
                       <FormControl>
-                        <Input placeholder={t('addForm.productTypesPlaceholder')} {...field} />
+                        <Input placeholder="e.g., Bread, Pastries" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -158,16 +154,16 @@ function SuppliersPageContent() {
                   name="purchase_days"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('addForm.purchaseDays')}</FormLabel>
+                      <FormLabel>Purchase Days</FormLabel>
                       <FormControl>
-                        <Input placeholder={t('addForm.purchaseDaysPlaceholder')} {...field} />
+                        <Input placeholder="e.g., Monday, Thursday" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 <Button type="submit" className="w-full">
-                  {t('addForm.submit')}
+                  Add Supplier
                 </Button>
               </form>
             </Form>
@@ -175,17 +171,17 @@ function SuppliersPageContent() {
         </Card>
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>{t('list.title')}</CardTitle>
+            <CardTitle>Your Suppliers</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="max-h-[480px] overflow-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('list.name')}</TableHead>
-                    <TableHead>{t('list.productTypes')}</TableHead>
-                    <TableHead>{t('list.purchaseDays')}</TableHead>
-                    <TableHead className="text-right">{t('list.actions')}</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Product Types</TableHead>
+                    <TableHead>Purchase Days</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -196,7 +192,7 @@ function SuppliersPageContent() {
                         <TableCell>{supplier.product_types}</TableCell>
                         <TableCell>{supplier.purchase_days}</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => deleteSupplier(supplier.id)} title={t('list.deleteTooltip')}>
+                          <Button variant="ghost" size="icon" onClick={() => deleteSupplier(supplier.id)} title="Delete Supplier">
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </TableCell>
@@ -205,7 +201,7 @@ function SuppliersPageContent() {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={4} className="text-center py-10">
-                        {t('list.noData')}
+                        No suppliers added yet.
                       </TableCell>
                     </TableRow>
                   )}
@@ -218,7 +214,6 @@ function SuppliersPageContent() {
     </main>
   );
 }
-
 
 export default function SuppliersPage() {
     return (

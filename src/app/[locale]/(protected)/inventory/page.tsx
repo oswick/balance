@@ -30,7 +30,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-provider";
 import ProtectedLayout from "../layout";
-import { useTranslations } from "next-intl";
 
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required."),
@@ -43,8 +42,6 @@ function InventoryPageContent() {
   const { supabase, user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const { toast } = useToast();
-  const t = useTranslations("Inventory");
-
 
   const fetchProducts = React.useCallback(async () => {
     if (!user) return;
@@ -55,16 +52,15 @@ function InventoryPageContent() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      toast({ title: t('errors.fetch'), description: error.message, variant: "destructive" });
+      toast({ title: "Error fetching products", description: error.message, variant: "destructive" });
     } else {
       setProducts(data as Product[]);
     }
-  }, [supabase, user, toast, t]);
+  }, [supabase, user, toast]);
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
-
 
   const form = useForm<z.infer<typeof productSchema>>({
     resolver: zodResolver(productSchema),
@@ -83,11 +79,11 @@ function InventoryPageContent() {
       .insert([{ ...values, user_id: user.id }]);
     
     if (error) {
-      toast({ title: t('errors.add'), description: error.message, variant: "destructive" });
+      toast({ title: "Error adding product", description: error.message, variant: "destructive" });
     } else {
       toast({
-        title: t('success.addTitle'),
-        description: t('success.addDesc'),
+        title: "Success!",
+        description: "Product has been added to your inventory.",
       });
       form.reset({
         name: "",
@@ -102,11 +98,11 @@ function InventoryPageContent() {
   const deleteProduct = async (id: string) => {
     const { error } = await supabase.from('products').delete().eq('id', id);
     if (error) {
-      toast({ title: t('errors.delete'), description: error.message, variant: "destructive" });
+      toast({ title: "Error deleting product", description: error.message, variant: "destructive" });
     } else {
       toast({
-        title: t('success.deleteTitle'),
-        description: t('success.deleteDesc'),
+        title: "Product Deleted",
+        description: "The product has been removed from your inventory.",
         variant: "destructive",
       });
       fetchProducts();
@@ -123,15 +119,15 @@ function InventoryPageContent() {
   return (
     <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <PageHeader
-        title={t('title')}
-        description={t('description')}
+        title="Inventory"
+        description="Add and manage products in your inventory."
       />
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PlusCircle className="h-5 w-5" />
-              {t('addForm.title')}
+              Add New Product
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -145,9 +141,9 @@ function InventoryPageContent() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('addForm.name')}</FormLabel>
+                      <FormLabel>Product Name</FormLabel>
                       <FormControl>
-                        <Input placeholder={t('addForm.namePlaceholder')} {...field} />
+                        <Input placeholder="e.g., Artisan Bread" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -158,7 +154,7 @@ function InventoryPageContent() {
                   name="purchase_price"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('addForm.purchasePrice')}</FormLabel>
+                      <FormLabel>Purchase Price</FormLabel>
                       <FormControl>
                         <Input type="number" placeholder="2.50" {...field} />
                       </FormControl>
@@ -171,7 +167,7 @@ function InventoryPageContent() {
                   name="selling_price"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('addForm.sellingPrice')}</FormLabel>
+                      <FormLabel>Selling Price</FormLabel>
                       <FormControl>
                         <Input type="number" placeholder="5.00" {...field} />
                       </FormControl>
@@ -184,7 +180,7 @@ function InventoryPageContent() {
                   name="quantity"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('addForm.quantity')}</FormLabel>
+                      <FormLabel>Initial Quantity</FormLabel>
                       <FormControl>
                         <Input type="number" placeholder="100" {...field} />
                       </FormControl>
@@ -193,7 +189,7 @@ function InventoryPageContent() {
                   )}
                 />
                 <Button type="submit" className="w-full">
-                  {t('addForm.submit')}
+                  Add Product
                 </Button>
               </form>
             </Form>
@@ -201,18 +197,18 @@ function InventoryPageContent() {
         </Card>
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>{t('list.title')}</CardTitle>
+            <CardTitle>Current Inventory</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="max-h-[480px] overflow-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('list.name')}</TableHead>
-                    <TableHead>{t('list.purchasePrice')}</TableHead>
-                    <TableHead>{t('list.sellingPrice')}</TableHead>
-                    <TableHead>{t('list.quantity')}</TableHead>
-                    <TableHead className="text-right">{t('list.actions')}</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Purchase Price</TableHead>
+                    <TableHead>Selling Price</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -234,7 +230,7 @@ function InventoryPageContent() {
                             variant="ghost"
                             size="icon"
                             onClick={() => deleteProduct(product.id)}
-                            title={t('list.deleteTooltip')}
+                            title="Delete Product"
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
@@ -244,7 +240,7 @@ function InventoryPageContent() {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center py-10">
-                        {t('list.noData')}
+                        No products in inventory.
                       </TableCell>
                     </TableRow>
                   )}

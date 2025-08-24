@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -46,8 +45,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-provider";
 import ProtectedLayout from "../layout";
-import { useTranslations } from "next-intl";
-
 
 const salesSchema = z.object({
   date: z.date({
@@ -57,13 +54,11 @@ const salesSchema = z.object({
   quantity: z.coerce.number().min(1, "Quantity must be at least 1."),
 });
 
-
 function SalesPageContent() {
   const { supabase, user } = useAuth();
   const [sales, setSales] = useState<Sale[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const { toast } = useToast();
-  const t = useTranslations("Sales");
 
   const fetchSales = React.useCallback(async () => {
     if (!user) return;
@@ -77,12 +72,12 @@ function SalesPageContent() {
       .order('date', { ascending: false });
 
     if (error) {
-      toast({ title: t('errors.fetchSales'), description: error.message, variant: "destructive" });
+      toast({ title: "Error fetching sales", description: error.message, variant: "destructive" });
     } else {
       const formattedData = data.map((d: any) => ({ ...d, product_name: d.products.name }));
       setSales(formattedData as Sale[]);
     }
-  }, [supabase, user, toast, t]);
+  }, [supabase, user, toast]);
 
   const fetchProducts = React.useCallback(async () => {
     if (!user) return;
@@ -93,11 +88,11 @@ function SalesPageContent() {
       .order('name', { ascending: true });
 
     if (error) {
-      toast({ title: t('errors.fetchProducts'), description: error.message, variant: "destructive" });
+      toast({ title: "Error fetching products", description: error.message, variant: "destructive" });
     } else {
       setProducts(data as Product[]);
     }
-  }, [supabase, user, toast, t]);
+  }, [supabase, user, toast]);
 
   useEffect(() => {
     fetchSales();
@@ -119,7 +114,8 @@ function SalesPageContent() {
     const product = products.find((p) => p.id === values.product_id);
     if (!product) {
       toast({
-        title: t('errors.productNotFound'),
+        title: "Error",
+        description: "Product not found.",
         variant: "destructive",
       });
       return;
@@ -127,8 +123,8 @@ function SalesPageContent() {
 
     if (product.quantity < values.quantity) {
       toast({
-        title: t('errors.noStock'),
-        description: `${t('errors.noStockDesc')} ${product.name}. ${t('errors.available')}: ${product.quantity}`,
+        title: "Error",
+        description: `Not enough stock for ${product.name}. Available: ${product.quantity}`,
         variant: "destructive",
       });
       return;
@@ -152,14 +148,14 @@ function SalesPageContent() {
 
     if (error) {
        toast({
-        title: t('errors.add'),
+        title: "Error recording sale",
         description: error.message,
         variant: "destructive",
       });
     } else {
       toast({
-        title: t('success.addTitle'),
-        description: t('success.addDesc'),
+        title: "Success!",
+        description: "Daily sale has been added.",
       });
       form.reset({
         date: new Date(),
@@ -181,11 +177,11 @@ function SalesPageContent() {
     });
 
     if (error) {
-       toast({ title: t('errors.delete'), description: error.message, variant: "destructive" });
+       toast({ title: "Error deleting sale", description: error.message, variant: "destructive" });
     } else {
         toast({
-            title: t('success.deleteTitle'),
-            description: t('success.deleteDesc'),
+            title: "Sale Deleted",
+            description: "The sale record has been removed.",
             variant: "destructive",
         });
         fetchSales();
@@ -203,15 +199,15 @@ function SalesPageContent() {
   return (
     <main className="flex-1 space-y-4 p-4 md:p-8 pt-6 animate-in">
       <PageHeader
-        title={t('title')}
-        description={t('description')}
+        title="Daily Sales"
+        description="Record your total sales for each day."
       />
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PlusCircle className="h-5 w-5" />
-              {t('addForm.title')}
+              Add New Sale
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -222,7 +218,7 @@ function SalesPageContent() {
                   name="date"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>{t('addForm.date')}</FormLabel>
+                      <FormLabel>Date of Sale</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -236,7 +232,7 @@ function SalesPageContent() {
                               {field.value ? (
                                 format(field.value, "PPP")
                               ) : (
-                                <span>{t('addForm.pickDate')}</span>
+                                <span>Pick a date</span>
                               )}
                               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
@@ -264,20 +260,20 @@ function SalesPageContent() {
                   name="product_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('addForm.product')}</FormLabel>
+                      <FormLabel>Product</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={t('addForm.productPlaceholder')} />
+                            <SelectValue placeholder="Select a product" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {products.map((p) => (
                             <SelectItem key={p.id} value={p.id}>
-                              {p.name} ({t('addForm.stock')}: {p.quantity})
+                              {p.name} (Stock: {p.quantity})
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -292,7 +288,7 @@ function SalesPageContent() {
                   name="quantity"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('addForm.quantity')}</FormLabel>
+                      <FormLabel>Quantity Sold</FormLabel>
                       <FormControl>
                         <Input type="number" placeholder="1" {...field} />
                       </FormControl>
@@ -302,7 +298,7 @@ function SalesPageContent() {
                 />
                 
                 <Button type="submit" className="w-full">
-                  {t('addForm.submit')}
+                  Add Sale
                 </Button>
               </form>
             </Form>
@@ -310,18 +306,18 @@ function SalesPageContent() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>{t('history.title')}</CardTitle>
+            <CardTitle>Sales History</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="max-h-[400px] overflow-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('history.date')}</TableHead>
-                    <TableHead>{t('history.product')}</TableHead>
-                    <TableHead>{t('history.quantity')}</TableHead>
-                    <TableHead className="text-right">{t('history.amount')}</TableHead>
-                    <TableHead className="text-right">{t('history.actions')}</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -335,7 +331,7 @@ function SalesPageContent() {
                           {formatCurrency(sale.amount)}
                         </TableCell>
                          <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => deleteSale(sale)} title={t('history.deleteTooltip')}>
+                          <Button variant="ghost" size="icon" onClick={() => deleteSale(sale)} title="Delete Sale">
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </TableCell>
@@ -344,7 +340,7 @@ function SalesPageContent() {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center py-10">
-                        {t('history.noData')}
+                        No sales recorded yet.
                       </TableCell>
                     </TableRow>
                   )}
@@ -357,7 +353,6 @@ function SalesPageContent() {
     </main>
   );
 }
-
 
 export default function SalesPage() {
     return (

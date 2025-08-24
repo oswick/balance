@@ -2,16 +2,14 @@
 
 import { useEffect } from 'react';
 import { useAuth } from '@/context/auth-provider';
-import { useRouter, usePathname } from 'next-intl/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import MainLayout from '@/components/layout/main-layout';
-import { useTranslations } from 'next-intl';
 import { Shortcuts } from '@/components/shortcuts';
 
 const ProtectedLayout = ({ children }: { children: React.ReactNode }) => {
     const { user, loading } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
-    const t = useTranslations("Dashboard.errors");
 
     useEffect(() => {
         if (loading) return; 
@@ -31,7 +29,7 @@ const ProtectedLayout = ({ children }: { children: React.ReactNode }) => {
     if (loading) {
         return (
             <div className="flex h-screen w-full items-center justify-center">
-                <div className="text-lg font-semibold">{t('loading')}</div>
+                <div className="text-lg font-semibold">Loading...</div>
             </div>
         );
     }

@@ -3,8 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/auth-provider';
-import ProtectedLayout from '../(protected)/layout';
-import { useTranslations } from 'next-intl';
+import ProtectedLayout from '../layout';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -22,7 +21,6 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
 
 function LoginPageContent() {
   const { supabase } = useAuth();
-  const t = useTranslations('Login');
 
   const handleGoogleLogin = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -41,20 +39,19 @@ function LoginPageContent() {
     <main className="flex min-h-screen flex-col items-center justify-center bg-background p-24">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">{t('title')}</CardTitle>
-          <CardDescription>{t('description')}</CardDescription>
+          <CardTitle className="text-2xl">Login</CardTitle>
+          <CardDescription>Sign in to your Balance account</CardDescription>
         </CardHeader>
         <CardContent>
           <Button onClick={handleGoogleLogin} className="w-full" variant="outline">
             <GoogleIcon className="mr-2 h-4 w-4" />
-            {t('button')}
+            Login with Google
           </Button>
         </CardContent>
       </Card>
     </main>
   );
 }
-
 
 export default function LoginPage() {
     return (

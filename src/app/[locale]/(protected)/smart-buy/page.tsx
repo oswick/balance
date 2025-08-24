@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -14,12 +13,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/auth-provider";
 import { useToast } from "@/hooks/use-toast";
 import ProtectedLayout from "../layout";
-import { useTranslations } from "next-intl";
 
 function SmartBuyPageContent() {
   const { supabase, user } = useAuth();
   const { toast } = useToast();
-  const t = useTranslations("SmartBuy");
   
   const [sales, setSales] = useState<Sale[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -57,11 +54,11 @@ function SmartBuyPageContent() {
       setSuppliers(suppliersRes.data as Supplier[]);
 
     } catch (error: any) {
-      toast({ title: t('errors.fetch'), description: error.message, variant: "destructive" });
+      toast({ title: "Error fetching data", description: error.message, variant: "destructive" });
     } finally {
       setIsDataLoading(false);
     }
-  }, [supabase, user, toast, t]);
+  }, [supabase, user, toast]);
 
   useEffect(() => {
     fetchData();
@@ -85,8 +82,8 @@ function SmartBuyPageContent() {
       const result = await getSmartBuySuggestion(input);
       setSuggestion(result.suggestion);
     } catch (error: any) {
-      toast({ title: t('errors.suggestion'), description: error.message, variant: "destructive" });
-      setSuggestion(t('errors.suggestion'));
+      toast({ title: "Error generating suggestion", description: error.message, variant: "destructive" });
+      setSuggestion("There was an error generating the suggestion. Please try again.");
     }
     
     setIsLoading(false);
@@ -95,14 +92,14 @@ function SmartBuyPageContent() {
   return (
     <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <PageHeader
-        title={t('title')}
-        description={t('description')}
+        title="Smart Buy Suggestions"
+        description="AI-driven advice on when and what to buy to maximize profitability."
       />
       <Card>
         <CardHeader>
-          <CardTitle>{t('card.title')}</CardTitle>
+          <CardTitle>Generate New Suggestion</CardTitle>
           <CardDescription>
-            {t('card.description')}
+            This tool analyzes your sales, expenses, product and supplier data to provide suggestions on optimal purchasing strategies.
           </CardDescription>
         </CardHeader>
         <CardContent className="min-h-[150px]">
@@ -115,9 +112,9 @@ function SmartBuyPageContent() {
           {!isDataLoading && !hasEnoughData && (
              <Alert variant="destructive">
               <Lightbulb className="h-4 w-4" />
-              <AlertTitle>{t('errors.noDataTitle')}</AlertTitle>
+              <AlertTitle>Not Enough Data</AlertTitle>
               <AlertDescription>
-                {t('errors.noDataDesc')}
+                Please add some data to all sections (Sales, Expenses, Products, Purchases, Suppliers) to generate a suggestion.
               </AlertDescription>
             </Alert>
           )}
@@ -128,7 +125,7 @@ function SmartBuyPageContent() {
                         <Lightbulb className="h-6 w-6 text-primary"/>
                     </div>
                     <div className="flex-1 space-y-2">
-                        <h3 className="font-semibold">{t('suggestion.title')}</h3>
+                        <h3 className="font-semibold">Here is your suggestion:</h3>
                         <p className="text-muted-foreground whitespace-pre-wrap">{suggestion}</p>
                     </div>
                 </div>
@@ -147,10 +144,10 @@ function SmartBuyPageContent() {
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {t('card.generating')}
+                Generating...
               </>
             ) : (
-              t('card.generate')
+              "Generate Suggestion"
             )}
           </Button>
         </CardFooter>
