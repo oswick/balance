@@ -36,7 +36,7 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b-2 border-border bg-background/95 backdrop-blur-sm">
+    <header className="fixed top-0 left-0 right-0 z-50 w-full border-b-2 border-border bg-background/95 backdrop-blur-sm">
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
         {/* Left: Logo / Title */}
         <div className="flex-shrink-0">
@@ -52,7 +52,7 @@ export function Header() {
               key={item.href}
               href={item.href}
               className={cn(
-                "transition-colors px-3 py-2 rounded-md",
+                "transition-colors px-3 py-2 rounded-md whitespace-nowrap",
                 pathname === item.href
                   ? "bg-accent text-accent-foreground"
                   : "text-foreground/60 hover:text-foreground/80"
@@ -83,17 +83,17 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown */}
+      {/* Mobile Menu Dropdown - Fixed positioning */}
       {isMobileMenuOpen && (
-        <div className="md:hidden">
-          <div className="flex flex-col gap-2 p-4 border-t-2 border-border bg-background">
+        <div className="md:hidden absolute top-full left-0 right-0 bg-background border-b-2 border-border shadow-lg">
+          <div className="flex flex-col gap-2 p-4">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={cn(
-                  "block rounded-md p-3 text-base font-medium",
+                  "block rounded-md p-3 text-base font-medium transition-colors",
                   pathname === item.href
                     ? "bg-accent text-accent-foreground"
                     : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
@@ -108,6 +108,7 @@ export function Header() {
                 handleLogout();
                 setIsMobileMenuOpen(false);
               }}
+              className="mt-2"
             >
               <LogOut className="mr-2 h-4 w-4" />
               Logout
