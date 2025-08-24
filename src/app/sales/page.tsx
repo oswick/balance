@@ -45,17 +45,19 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-provider";
+import ProtectedLayout from "../(protected)/layout";
 
-// Updated schema - product_id is now a string
+
 const salesSchema = z.object({
   date: z.date({
     required_error: "A date is required.",
   }),
-  product_id: z.string().min(1, "Please select a product."), // Changed from z.coerce.number()
+  product_id: z.string().min(1, "Please select a product."),
   quantity: z.coerce.number().min(1, "Quantity must be at least 1."),
 });
 
-export default function SalesPage() {
+
+function SalesPageContent() {
   const { supabase, user } = useAuth();
   const [sales, setSales] = useState<Sale[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -100,13 +102,12 @@ export default function SalesPage() {
     fetchProducts();
   }, [fetchSales, fetchProducts]);
 
-  // Updated form with correct default values
   const form = useForm<z.infer<typeof salesSchema>>({
     resolver: zodResolver(salesSchema),
     defaultValues: {
       date: new Date(),
       quantity: 1,
-      product_id: "", // Changed from 0 to empty string
+      product_id: "",
     },
   });
 
@@ -161,7 +162,7 @@ export default function SalesPage() {
       });
       form.reset({
         date: new Date(),
-        product_id: "", // Reset to empty string
+        product_id: "",
         quantity: 1,
       });
       fetchSales();
@@ -333,7 +334,7 @@ export default function SalesPage() {
                           {formatCurrency(sale.amount)}
                         </TableCell>
                          <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => deleteSale(sale)}>
+                          <Button variant="ghost" size="icon" onClick={() => deleteSale(sale)} title="Delete Sale">
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </TableCell>
@@ -354,4 +355,13 @@ export default function SalesPage() {
       </div>
     </main>
   );
+}
+
+
+export default function SalesPage() {
+    return (
+        <ProtectedLayout>
+            <SalesPageContent />
+        </ProtectedLayout>
+    )
 }

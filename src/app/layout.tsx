@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description: 'Your small business accounting companion.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -26,7 +26,7 @@ export default function RootLayout({
       </head>
       <body className={cn('font-body antialiased min-h-screen')}>
         <AuthProvider>
-          {children}
+            {children}
         </AuthProvider>
         <Toaster />
       </body>

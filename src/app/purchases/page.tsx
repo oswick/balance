@@ -45,17 +45,18 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-provider";
+import ProtectedLayout from "../(protected)/layout";
 
-// Updated schema - all IDs are now strings
 const purchaseSchema = z.object({
   date: z.date({ required_error: "A date is required." }),
-  product_id: z.string().min(1, "Please select a product."), // Changed from z.coerce.number()
-  supplier_id: z.string().min(1, "Please select a supplier."), // Changed from z.coerce.number()
+  product_id: z.string().min(1, "Please select a product."),
+  supplier_id: z.string().min(1, "Please select a supplier."),
   quantity: z.coerce.number().min(1, "Quantity must be at least 1."),
   total_cost: z.coerce.number().min(0.01, "Total cost must be greater than 0."),
 });
 
-export default function PurchasesPage() {
+
+function PurchasesPageContent() {
   const { supabase, user } = useAuth();
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -106,14 +107,13 @@ export default function PurchasesPage() {
     fetchSuppliers();
   }, [fetchPurchases, fetchProducts, fetchSuppliers]);
 
-  // Updated form with correct default values
   const form = useForm<z.infer<typeof purchaseSchema>>({
     resolver: zodResolver(purchaseSchema),
     defaultValues: {
       date: new Date(),
       quantity: 1,
-      product_id: "", // Changed from 0 to empty string
-      supplier_id: "", // Changed from 0 to empty string
+      product_id: "",
+      supplier_id: "",
       total_cost: 0
     },
   });
@@ -142,11 +142,12 @@ export default function PurchasesPage() {
     form.reset({ 
       date: new Date(), 
       quantity: 1, 
-      product_id: "", // Reset to empty string
-      supplier_id: "", // Reset to empty string
+      product_id: "",
+      supplier_id: "",
       total_cost: 0 
     });
     fetchPurchases();
+    fetchProducts(); // Refetch products to update stock
   }
 
   const deletePurchase = async (purchase: Purchase) => {
@@ -171,6 +172,7 @@ export default function PurchasesPage() {
         variant: "destructive",
       });
       fetchPurchases();
+      fetchProducts(); // Refetch products to update stock
     }
   };
 
@@ -310,7 +312,7 @@ export default function PurchasesPage() {
                         <TableCell>{purchase.quantity}</TableCell>
                         <TableCell className="text-right">{formatCurrency(purchase.total_cost)}</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => deletePurchase(purchase)}>
+                          <Button variant="ghost" size="icon" onClick={() => deletePurchase(purchase)} title="Delete Purchase">
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </TableCell>
@@ -329,4 +331,12 @@ export default function PurchasesPage() {
       </div>
     </main>
   );
+}
+
+export default function PurchasesPage() {
+    return (
+        <ProtectedLayout>
+            <PurchasesPageContent />
+        </ProtectedLayout>
+    )
 }

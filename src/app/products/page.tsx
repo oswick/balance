@@ -4,7 +4,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { PlusCircle, Trash2, Pencil } from "lucide-react";
+import { Trash2, Pencil } from "lucide-react";
 import React, { useState, useEffect } from "react";
 
 import { Product } from "@/types";
@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-provider";
+import ProtectedLayout from "../(protected)/layout";
 
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required."),
@@ -47,7 +48,7 @@ const productSchema = z.object({
   quantity: z.coerce.number().min(0, "Quantity cannot be negative."),
 });
 
-export default function ProductsPage() {
+function ProductsPageContent() {
   const { supabase, user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -72,17 +73,6 @@ export default function ProductsPage() {
     fetchProducts();
   }, [fetchProducts]);
 
-
-  const form = useForm<z.infer<typeof productSchema>>({
-    resolver: zodResolver(productSchema),
-    defaultValues: {
-      name: "",
-      purchase_price: 0,
-      selling_price: 0,
-      quantity: 0,
-    },
-  });
-
   const editForm = useForm<z.infer<typeof productSchema>>({
     resolver: zodResolver(productSchema),
   });
@@ -97,29 +87,6 @@ export default function ProductsPage() {
       });
     }
   }, [editingProduct, editForm]);
-
-  async function onAddSubmit(values: z.infer<typeof productSchema>) {
-    if (!user) return;
-    const { error } = await supabase
-      .from('products')
-      .insert([{ ...values, user_id: user.id }]);
-    
-    if (error) {
-      toast({ title: "Error adding product", description: error.message, variant: "destructive" });
-    } else {
-      toast({
-        title: "Success!",
-        description: "Product has been added to your catalog.",
-      });
-      form.reset({
-        name: "",
-        purchase_price: 0,
-        selling_price: 0,
-        quantity: 0,
-      });
-      fetchProducts();
-    }
-  }
 
   async function onEditSubmit(values: z.infer<typeof productSchema>) {
     if (!editingProduct) return;
@@ -161,100 +128,39 @@ export default function ProductsPage() {
       currency: "USD",
     }).format(amount);
   };
+  
+  const calculateUnitProfit = (product: Product) => {
+      // Profit per unit = Selling Price per unit - Purchase Price per unit
+      // We assume purchase_price is for the total quantity, so we need to find the per-unit purchase price.
+      // This is a simplification. A more robust solution might track individual purchase lots.
+      if (product.quantity > 0) {
+          const unitPurchasePrice = product.purchase_price / product.quantity;
+          return product.selling_price - unitPurchasePrice;
+      }
+      return product.selling_price; // If no quantity, profit is selling price (no cost basis)
+  }
 
   return (
     <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <PageHeader
         title="Product Catalog"
-        description="Manage your products, including purchase and selling prices."
+        description="View and manage your product information."
       />
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <PlusCircle className="h-5 w-5" />
-              Add New Product
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onAddSubmit)}
-                className="space-y-4"
-              >
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Product Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Artisan Bread" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="purchase_price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Purchase Price</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="2.50" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="selling_price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Selling Price</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="5.00" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="quantity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Initial Quantity</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="100" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full">
-                  Add Product
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-        <Card className="lg:col-span-2">
+      <div className="grid gap-6">
+        <Card>
           <CardHeader>
             <CardTitle>Your Products</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="max-h-[480px] overflow-auto">
+            <div className="max-h-[600px] overflow-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead>Purchase Price</TableHead>
+                    <TableHead>Cost Price</TableHead>
                     <TableHead>Selling Price</TableHead>
-                    <TableHead>Profit</TableHead>
-                    <TableHead>Quantity</TableHead>
+                    <TableHead>Unit Profit</TableHead>
+                    <TableHead>Stock</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -272,7 +178,7 @@ export default function ProductsPage() {
                           {formatCurrency(product.selling_price)}
                         </TableCell>
                         <TableCell className="font-medium text-green-600">
-                          {formatCurrency(product.selling_price - product.purchase_price)}
+                          {formatCurrency(calculateUnitProfit(product))}
                         </TableCell>
                         <TableCell>{product.quantity}</TableCell>
                         <TableCell className="text-right">
@@ -280,6 +186,7 @@ export default function ProductsPage() {
                             variant="ghost"
                             size="icon"
                             onClick={() => setEditingProduct(product)}
+                            title="Edit Product"
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -287,6 +194,7 @@ export default function ProductsPage() {
                             variant="ghost"
                             size="icon"
                             onClick={() => deleteProduct(product.id)}
+                            title="Delete Product"
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
@@ -296,7 +204,7 @@ export default function ProductsPage() {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-10">
-                        No products added yet.
+                        No products found. Add products in the Inventory or Purchases section.
                       </TableCell>
                     </TableRow>
                   )}
@@ -389,4 +297,12 @@ export default function ProductsPage() {
       </Dialog>
     </main>
   );
+}
+
+export default function ProductsPage() {
+    return (
+        <ProtectedLayout>
+            <ProductsPageContent />
+        </ProtectedLayout>
+    )
 }

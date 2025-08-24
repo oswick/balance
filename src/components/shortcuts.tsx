@@ -10,12 +10,10 @@ import {
 import { useHotkeys } from "react-hotkeys-hook"
 import React from "react"
 import { useSidebar } from "./ui/sidebar"
-import { useTranslations } from "next-intl"
 
 export function Shortcuts() {
   const [open, setOpen] = React.useState(false)
   const { toggleSidebar } = useSidebar()
-  const t = useTranslations("Shortcuts")
 
   useHotkeys("?", () => setOpen(true), {
     preventDefault: true,
@@ -26,9 +24,9 @@ export function Shortcuts() {
   })
   
   const shortcuts = [
-    { key: "?", description: t('showMenu') },
-    { key: "b", description: t('toggleSidebar') },
-    { key: "n", description: t('newItem') },
+    { key: "?", description: "Show this help menu" },
+    { key: "b", description: "Toggle sidebar" },
+    { key: "n", description: "New item (in context)" },
   ]
 
 
@@ -36,9 +34,9 @@ export function Shortcuts() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{t('title')}</DialogTitle>
+            <DialogTitle>Keyboard Shortcuts</DialogTitle>
             <DialogDescription>
-              {t('description')}
+              Use these shortcuts to navigate and work faster.
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4">

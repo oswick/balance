@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-provider";
+import ProtectedLayout from "../(protected)/layout";
 
 const supplierSchema = z.object({
   name: z.string().min(1, "Supplier name is required."),
@@ -38,7 +39,7 @@ const supplierSchema = z.object({
   purchase_days: z.string().min(1, "Purchase days are required."),
 });
 
-export default function SuppliersPage() {
+function SuppliersPageContent() {
   const { supabase, user } = useAuth();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const { toast } = useToast();
@@ -84,7 +85,11 @@ export default function SuppliersPage() {
         title: "Success!",
         description: "Supplier has been added.",
       });
-      form.reset();
+      form.reset({
+        name: "",
+        product_types: "",
+        purchase_days: "",
+      });
       fetchSuppliers();
     }
   }
@@ -189,7 +194,7 @@ export default function SuppliersPage() {
                         <TableCell>{supplier.product_types}</TableCell>
                         <TableCell>{supplier.purchase_days}</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => deleteSupplier(supplier.id)}>
+                          <Button variant="ghost" size="icon" onClick={() => deleteSupplier(supplier.id)} title="Delete Supplier">
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </TableCell>
@@ -210,4 +215,13 @@ export default function SuppliersPage() {
       </div>
     </main>
   );
+}
+
+
+export default function SuppliersPage() {
+    return (
+        <ProtectedLayout>
+            <SuppliersPageContent />
+        </ProtectedLayout>
+    )
 }

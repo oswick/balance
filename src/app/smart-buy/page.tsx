@@ -13,9 +13,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/auth-provider";
 import { useToast } from "@/hooks/use-toast";
+import ProtectedLayout from "../(protected)/layout";
 
-
-export default function SmartBuyPage() {
+function SmartBuyPageContent() {
   const { supabase, user } = useAuth();
   const { toast } = useToast();
   
@@ -79,8 +79,14 @@ export default function SmartBuyPage() {
       supplierInfo: JSON.stringify(suppliers),
     };
 
-    const result = await getSmartBuySuggestion(input);
-    setSuggestion(result.suggestion);
+    try {
+      const result = await getSmartBuySuggestion(input);
+      setSuggestion(result.suggestion);
+    } catch (error: any) {
+      toast({ title: "Error generating suggestion", description: error.message, variant: "destructive" });
+      setSuggestion("There was an error generating the suggestion. Please try again.");
+    }
+    
     setIsLoading(false);
   };
 
@@ -149,4 +155,12 @@ export default function SmartBuyPage() {
       </Card>
     </main>
   );
+}
+
+export default function SmartBuyPage() {
+    return (
+        <ProtectedLayout>
+            <SmartBuyPageContent />
+        </ProtectedLayout>
+    )
 }
