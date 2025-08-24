@@ -1,0 +1,53 @@
+"use client"
+
+import { useEffect } from 'react';
+import { useAuth } from '@/context/auth-provider';
+import { useRouter, usePathname } from 'next/navigation';
+import MainLayout from '@/components/layout/main-layout';
+import { useTranslations } from 'next-intl';
+
+const ProtectedLayout = ({ children }: { children: React.ReactNode }) => {
+    const { user, loading } = useAuth();
+    const router = useRouter();
+    const pathname = usePathname();
+    const t = useTranslations("Dashboard.errors");
+
+    useEffect(() => {
+        if (loading) return; 
+
+        const isLoginPage = pathname.includes('/login');
+
+        if (!user && !isLoginPage) {
+            router.push('/login');
+        }
+        
+        if (user && isLoginPage) {
+            router.push('/');
+        }
+
+    }, [user, loading, router, pathname]);
+
+    if (loading) {
+        return (
+            <div className="flex h-screen w-full items-center justify-center">
+                <div className="text-lg font-semibold">{t('loading')}</div>
+            </div>
+        );
+    }
+    
+    if (pathname.includes('/login')) {
+      return <>{children}</>
+    }
+
+    if(!user) {
+        return null;
+    }
+
+    return (
+        <MainLayout>
+            {children}
+        </MainLayout>
+    );
+};
+
+export default ProtectedLayout;
