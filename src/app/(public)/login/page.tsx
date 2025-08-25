@@ -43,25 +43,6 @@ function GithubIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width="24" 
-      height="24" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-      {...props}
-    >
-      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
-    </svg>
-  );
-}
-
 export default function LoginPage() {
   const { supabase, user } = useAuth();
   const router = useRouter();
@@ -73,7 +54,7 @@ export default function LoginPage() {
     }
   }, [user, router]);
 
-  const handleOAuthLogin = async (provider: 'google' | 'github' | 'facebook') => {
+  const handleOAuthLogin = async (provider: 'google' | 'github') => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
@@ -114,14 +95,6 @@ export default function LoginPage() {
           >
             <GithubIcon className="mr-2 h-5 w-5" />
             Login with GitHub
-          </Button>
-           <Button
-            onClick={() => handleOAuthLogin('facebook')}
-            className="w-full flex items-center justify-center"
-            variant="outline"
-          >
-            <FacebookIcon className="mr-2 h-5 w-5" />
-            Login with Facebook
           </Button>
         </CardContent>
       </Card>
