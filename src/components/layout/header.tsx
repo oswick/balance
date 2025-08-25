@@ -41,6 +41,8 @@ export function Header() {
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
+  
+  const showLoginButton = !user && !['/', '/login', '/signup'].includes(pathname);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b-2 border-border bg-background/95 backdrop-blur-sm">
@@ -121,9 +123,11 @@ export function Header() {
               </div>
             </>
           ) : (
-            <Button asChild variant="default" size="sm">
-              <Link href="/login">Login</Link>
-            </Button>
+            showLoginButton && (
+                <Button asChild variant="default" size="sm">
+                    <Link href="/login">Login</Link>
+                </Button>
+            )
           )}
         </div>
       </div>
