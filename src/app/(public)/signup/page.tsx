@@ -1,13 +1,10 @@
+
 "use client";
 
 import React, { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { PageHeader } from "@/components/page-header";
-import ProtectedLayout from "../../protected-layout";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/auth-provider";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import {
   Card,
   CardContent,
@@ -15,29 +12,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
-import { signUpWithEmailAndPassword } from "@/lib/actions";
-import { Loader2, Clock, Calendar, Building, ArrowRight, ArrowLeft, MailCheck } from "lucide-react";
-import type { BusinessProfile } from "@/types";
-import { useAuth } from "@/context/auth-provider";
 import Link from "next/link";
 
 
@@ -55,29 +29,53 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-const signUpSchema = z.object({
-  email: z.string().email("Invalid email address."),
-  password: z.string().min(8, "Password must be at least 8 characters long."),
-});
+function GithubIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      width="24" 
+      height="24" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      {...props}
+    >
+      <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/>
+      <path d="M9 18c-4.51 2-5-2-7-2"/>
+    </svg>
+  );
+}
+
+function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      width="24" 
+      height="24" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+    </svg>
+  );
+}
+
 
 export default function SignUpPage() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
   const { toast } = useToast();
-  const router = useRouter();
   const { supabase } = useAuth();
-
-  const form = useForm<z.infer<typeof signUpSchema>>({
-    resolver: zodResolver(signUpSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
   
-  const handleGoogleSignUp = async () => {
+  const handleOAuthSignUp = async (provider: 'google' | 'github' | 'facebook') => {
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider,
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
       },
@@ -89,104 +87,40 @@ export default function SignUpPage() {
         description: error.message,
         variant: "destructive"
       });
-      console.error('Error during Google sign-up:', error);
+      console.error(`Error during ${provider} sign-up:`, error);
     }
   };
 
-  async function handleSignUp(values: z.infer<typeof signUpSchema>) {
-    setIsSubmitting(true);
-    
-    const result = await signUpWithEmailAndPassword({
-      email: values.email,
-      password: values.password,
-    });
-
-    setIsSubmitting(false);
-
-    if (result.error) {
-      toast({ title: "Sign-up failed", description: result.error, variant: "destructive" });
-    } else {
-        setEmailSent(true);
-    }
-  }
-
   return (
      <main className="flex min-h-[calc(100vh-56px)] flex-col items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md shadow-lg">
+        <Card className="w-full max-w-sm shadow-lg">
             <CardHeader>
                 <CardTitle className="text-2xl md:text-3xl font-black text-center">Create Your Account</CardTitle>
                  <CardDescription className="text-center">
-                    Join to start managing your business finances.
+                    Join with your favorite social account.
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                {emailSent ? (
-                    <div className="text-center space-y-4 animate-in p-8">
-                        <MailCheck className="mx-auto h-12 w-12 text-green-500" />
-                        <h3 className="text-xl font-bold">Check your email</h3>
-                        <p className="text-muted-foreground">
-                            We've sent a verification link to your email address. Please click the link to continue.
-                        </p>
-                        <Button onClick={() => router.push('/login')} className="w-full">
-                            Back to Login
-                        </Button>
-                    </div>
-                ) : (
-                    <>
-                        <div className="space-y-4">
-                            <Button onClick={handleGoogleSignUp} className="w-full" variant="outline">
-                                <GoogleIcon className="mr-2 h-5 w-5" />
-                                Sign up with Google
-                            </Button>
-
-                            <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                    <span className="w-full border-t" />
-                                </div>
-                                <div className="relative flex justify-center text-xs uppercase">
-                                    <span className="bg-background px-2 text-muted-foreground">
-                                        Or continue with
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <Form {...form}>
-                            <form onSubmit={form.handleSubmit(handleSignUp)} className="space-y-6 mt-4">
-                                <div className="space-y-4 animate-in">
-                                    <FormField control={form.control} name="email" render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Email Address</FormLabel>
-                                            <FormControl><Input placeholder="you@example.com" {...field} /></FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )} />
-                                    <FormField control={form.control} name="password" render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Password</FormLabel>
-                                            <FormControl><Input type="password" placeholder="••••••••" {...field} /></FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )} />
-                                    <Button type="submit" disabled={isSubmitting} className="w-full">
-                                        {isSubmitting ? (
-                                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating Account...</>
-                                        ) : (
-                                            "Create Account with Email"
-                                        )}
-                                    </Button>
-                                </div>
-                            </form>
-                        </Form>
-
-                        <p className="mt-6 text-sm text-center text-muted-foreground">
-                            Already have an account?{' '}
-                            <Link href="/login" className="underline font-semibold hover:text-primary">
-                                Log in
-                            </Link>
-                        </p>
-                    </>
-                )}
+                <div className="space-y-3">
+                    <Button onClick={() => handleOAuthSignUp('google')} className="w-full" variant="outline">
+                        <GoogleIcon className="mr-2 h-5 w-5" />
+                        Sign up with Google
+                    </Button>
+                    <Button onClick={() => handleOAuthSignUp('github')} className="w-full" variant="outline">
+                        <GithubIcon className="mr-2 h-5 w-5" />
+                        Sign up with GitHub
+                    </Button>
+                    <Button onClick={() => handleOAuthSignUp('facebook')} className="w-full" variant="outline">
+                        <FacebookIcon className="mr-2 h-5 w-5" />
+                        Sign up with Facebook
+                    </Button>
+                </div>
+                <p className="mt-6 text-sm text-center text-muted-foreground">
+                    Already have an account?{' '}
+                    <Link href="/login" className="underline font-semibold hover:text-primary">
+                        Log in
+                    </Link>
+                </p>
             </CardContent>
         </Card>
      </main>
