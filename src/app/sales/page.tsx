@@ -73,7 +73,6 @@ export default function SalesPage() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const { toast } = useToast();
-  const [saleType, setSaleType] = useState<"inventory" | "adhoc">("inventory");
 
   const fetchSales = React.useCallback(async () => {
     if (!user) return;
@@ -123,6 +122,9 @@ export default function SalesPage() {
     },
   });
 
+  // Watch the current sale type from the form
+  const watchedSaleType = form.watch("saleType");
+
   async function onSubmit(values: z.infer<typeof salesSchema>) {
     if (!user) return;
 
@@ -162,7 +164,18 @@ export default function SalesPage() {
       toast({ title: "Error recording sale", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Success!", description: "Sale has been added." });
-      form.reset({ date: new Date(), quantity: 1, saleType: saleType, product_id: "", product_name: "", price: 0 });
+      
+      // Reset form while preserving the current sale type
+      const currentSaleType = values.saleType;
+      form.reset({ 
+        date: new Date(), 
+        quantity: 1, 
+        saleType: currentSaleType,
+        product_id: "",
+        product_name: "",
+        price: undefined
+      });
+      
       fetchSales();
       if (values.saleType === "inventory") fetchProducts();
     }
@@ -189,8 +202,6 @@ export default function SalesPage() {
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
-
-  const watchedSaleType = form.watch("saleType");
 
   return (
     <ProtectedLayout>
@@ -286,7 +297,7 @@ export default function SalesPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Product</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select a product from inventory" />
@@ -326,7 +337,7 @@ export default function SalesPage() {
                           <FormItem>
                             <FormLabel>Price per unit</FormLabel>
                             <FormControl>
-                              <Input type="number" placeholder="5.50" {...field} />
+                              <Input type="number" step="0.01" placeholder="5.50" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
