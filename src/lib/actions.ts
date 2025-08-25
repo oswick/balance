@@ -19,17 +19,15 @@ export async function getSmartBuySuggestion(input: SmartBuySuggestionInput): Pro
     }
 }
 
-interface SignUpWithBusinessParams {
+interface SignUpWithEmailAndPasswordParams {
     email: string;
     password: string;
-    businessProfile: Omit<BusinessProfile, 'id' | 'user_id' | 'created_at'>;
 }
 
-export async function signUpWithBusiness(params: SignUpWithBusinessParams): Promise<{ success: boolean; error?: string }> {
+export async function signUpWithEmailAndPassword(params: SignUpWithEmailAndPasswordParams): Promise<{ success: boolean; error?: string }> {
     const cookieStore = cookies();
     const supabase = createServerClient(cookieStore);
 
-    // 1. Create the user
     const { data: authData, error: authError } = await supabase.auth.signUp({
         email: params.email,
         password: params.password,
@@ -39,24 +37,29 @@ export async function signUpWithBusiness(params: SignUpWithBusinessParams): Prom
         return { success: false, error: authError?.message || 'Failed to create user.' };
     }
 
-    const userId = authData.user.id;
+    return { success: true };
+}
 
-    // 2. Create the business profile
+
+interface SignUpWithBusinessProfileParams {
+    userId: string;
+    businessProfile: Omit<BusinessProfile, 'id' | 'user_id' | 'created_at'>;
+}
+
+export async function signUpWithBusinessProfile(params: SignUpWithBusinessProfileParams): Promise<{ success: boolean; error?: string }> {
+    const cookieStore = cookies();
+    const supabase = createServerClient(cookieStore);
+
     const { error: profileError } = await supabase
         .from('business_profiles')
         .insert({
-            user_id: userId,
+            user_id: params.userId,
             ...params.businessProfile
         });
 
     if (profileError) {
-        // Optional: Attempt to clean up the created user if profile creation fails
-        const supabaseAdmin = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-        );
-        await supabaseAdmin.auth.admin.deleteUser(userId);
-        
+        // Since the user is already created, we just report the error.
+        // We don't delete the user, as they can try to create the profile again later.
         return { success: false, error: `Failed to create business profile: ${profileError.message}` };
     }
 
