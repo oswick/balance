@@ -42,7 +42,7 @@ export async function deleteUserAccount(): Promise<{ success: boolean; error?: s
     
     // List of tables with user_id foreign key. 
     // This order matters if there are dependencies. Start with tables that are "children".
-    const tablesToDeleteFrom = ['sales', 'purchases', 'expenses', 'products', 'suppliers'];
+    const tablesToDeleteFrom = ['sales', 'purchases', 'expenses', 'products', 'suppliers', 'business_profiles'];
 
     // Delete all records associated with the user
     for (const table of tablesToDeleteFrom) {

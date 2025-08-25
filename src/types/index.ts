@@ -55,3 +55,12 @@ export interface Supplier {
   created_at: string;
 }
     
+export interface BusinessProfile {
+  id: string;
+  user_id: string;
+  name: string | null;
+  business_type: string | null;
+  hours: string | null;
+  product_types: string | null;
+  created_at: string;
+}
