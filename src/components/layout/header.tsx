@@ -3,11 +3,18 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, Menu, X } from "lucide-react";
+import { LogOut, Menu, X, ChevronDown } from "lucide-react";
 
 import { useAuth } from "@/context/auth-provider";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
@@ -37,15 +44,15 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b-2 border-border bg-background/95 backdrop-blur-sm">
-      <div className="container mx-auto flex h-14 items-center justify-between px-4">
+      <div className="container mx-auto flex h-14 items-center px-4">
         {/* Left: Logo / Title */}
-        <Link href={user ? "/dashboard" : "/"} className="font-bold text-lg">
+        <Link href={user ? "/dashboard" : "/"} className="font-bold text-lg mr-6">
           Balance
         </Link>
 
         {/* Center: Navigation (Authenticated) */}
-        {user && (
-          <nav className="hidden md:flex flex-1 justify-center space-x-2 text-sm font-medium">
+        {user ? (
+          <nav className="hidden md:flex flex-1 justify-center items-center space-x-2 text-sm font-medium">
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -61,18 +68,37 @@ export function Header() {
               </Link>
             ))}
           </nav>
+        ) : (
+          <div className="flex-1"></div>
         )}
 
         {/* Right: Actions */}
         <div className="flex items-center space-x-2">
           {user ? (
             <>
-              {/* Logout button desktop */}
+              {/* Desktop User Menu */}
               <div className="hidden md:block">
-                <Button variant="ghost" size="sm" onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      Más
+                      <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link href="/profile">Profile</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/settings">Settings</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Logout</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               {/* Mobile menu toggle */}
@@ -84,8 +110,8 @@ export function Header() {
               </div>
             </>
           ) : (
-             <Button asChild variant="default" size="sm">
-                <Link href="/login">Login</Link>
+            <Button asChild variant="default" size="sm">
+              <Link href="/login">Login</Link>
             </Button>
           )}
         </div>
@@ -110,6 +136,10 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
+            <div className="border-t border-border mt-2 pt-2">
+                <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="block rounded-md p-3 text-base font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground">Profile</Link>
+                <Link href="/settings" onClick={() => setIsMobileMenuOpen(false)} className="block rounded-md p-3 text-base font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground">Settings</Link>
+            </div>
             <Button
               variant="outline"
               onClick={() => {
