@@ -4,8 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, PlusCircle, Pencil, Package, DollarSign, User, Calendar as CalendarIcon2, Hash } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import { Calendar as CalendarIcon, PlusCircle, Pencil, Package, DollarSign, User, Calendar as CalendarIcon2, Hash, Search, Check, ChevronDown } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
 
 import { Purchase, Product, Supplier } from "@/types";
 import { cn } from "@/lib/utils";
@@ -36,12 +36,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-provider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -84,6 +84,107 @@ const editPurchaseSchema = z.object({
   total_cost: z.coerce.number().min(0.01),
 });
 
+// Optimized Combobox Component
+const ComboboxSelect = ({ 
+  options, 
+  value, 
+  onValueChange, 
+  placeholder, 
+  emptyText = "No options found",
+  searchPlaceholder = "Search...",
+  className = "",
+  displayKey = "name",
+  valueKey = "id",
+  disabled = false
+}: {
+  options: any[];
+  value?: string;
+  onValueChange: (value: string) => void;
+  placeholder: string;
+  emptyText?: string;
+  searchPlaceholder?: string;
+  className?: string;
+  displayKey?: string;
+  valueKey?: string;
+  disabled?: boolean;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const filteredOptions = useMemo(() => {
+    if (!search) return options;
+    return options.filter(option => 
+      option[displayKey].toLowerCase().includes(search.toLowerCase())
+    );
+  }, [options, search, displayKey]);
+
+  const selectedOption = options.find(option => option[valueKey] === value);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className={cn(
+            "w-full justify-between text-base border-2 h-10",
+            !value && "text-muted-foreground",
+            className
+          )}
+          disabled={disabled}
+        >
+          {selectedOption ? selectedOption[displayKey] : placeholder}
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 border-2 border-border bg-background shadow-brutal" align="start">
+        <Command className="rounded-none">
+          <CommandInput 
+            placeholder={searchPlaceholder} 
+            value={search}
+            onValueChange={setSearch}
+            className="border-0 border-b-2 border-border rounded-none focus:ring-0"
+          />
+          <CommandEmpty className="py-6 text-center text-sm text-muted-foreground">
+            {emptyText}
+          </CommandEmpty>
+          <CommandGroup className="max-h-[200px] overflow-auto">
+            {filteredOptions.map((option) => (
+              <CommandItem
+                key={option[valueKey]}
+                value={option[displayKey]}
+                onSelect={() => {
+                  onValueChange(option[valueKey]);
+                  setOpen(false);
+                  setSearch("");
+                }}
+                className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent rounded-none"
+              >
+                <Check
+                  className={cn(
+                    "h-4 w-4",
+                    value === option[valueKey] ? "opacity-100" : "opacity-0"
+                  )}
+                />
+                <div className="flex-1">
+                  <div className="font-medium">{option[displayKey]}</div>
+                  {option.stock !== undefined && (
+                    <div className="text-xs text-muted-foreground">Stock: {option.stock}</div>
+                  )}
+                  {option.product_types && (
+                    <div className="text-xs text-muted-foreground">{option.product_types}</div>
+                  )}
+                </div>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
 export default function PurchasesPage() {
   const { supabase, user } = useAuth();
   const [purchases, setPurchases] = useState<Purchase[]>([]);
@@ -123,44 +224,39 @@ export default function PurchasesPage() {
   }, [editingPurchase, editForm]);
 
   // --- FETCH DATA ---
-// En tu archivo de purchases, reemplaza la función fetchPurchases con esto:
+  const fetchPurchases = React.useCallback(async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('purchases')
+      .select(`
+        *,
+        products(name),
+        suppliers(name)
+      `)
+      .eq('user_id', user.id)
+      .order('date', { ascending: false });
 
-const fetchPurchases = React.useCallback(async () => {
-  if (!user) return;
-  const { data, error } = await supabase
-    .from('purchases')
-    .select(`
-      *,
-      products(name),
-      suppliers(name)
-    `)
-    .eq('user_id', user.id)
-    .order('date', { ascending: false });
-
-  if (error) {
-    toast({ title: "Error fetching purchases", description: error.message, variant: "destructive" });
-  } else {
-    setPurchases(data.map((d: any) => ({
-      ...d,
-      // Primero intenta obtener el nombre del producto desde la relación
-      // Si no existe (producto ad-hoc), usa el product_name almacenado
-      // Si tampoco existe, usa "Unknown Product" como fallback
-      product_name: d.products?.name || d.product_name || "Unknown Product",
-      supplier_name: d.suppliers?.name || "Unknown Supplier",
-    })));
-  }
-}, [supabase, user, toast]);
+    if (error) {
+      toast({ title: "Error fetching purchases", description: error.message, variant: "destructive" });
+    } else {
+      setPurchases(data.map((d: any) => ({
+        ...d,
+        product_name: d.products?.name || d.product_name || "Unknown Product",
+        supplier_name: d.suppliers?.name || "Unknown Supplier",
+      })));
+    }
+  }, [supabase, user, toast]);
 
   const fetchProducts = React.useCallback(async () => {
     if (!user) return;
-    const { data, error } = await supabase.from('products').select('*').eq('user_id', user.id);
+    const { data, error } = await supabase.from('products').select('*').eq('user_id', user.id).order('name');
     if (error) toast({ title: "Error fetching products", description: error.message, variant: "destructive" });
-    else setProducts(data);
+    else setProducts(data.map(p => ({ ...p, stock: p.quantity }))); // Add stock for display
   }, [supabase, user, toast]);
 
   const fetchSuppliers = React.useCallback(async () => {
     if (!user) return;
-    const { data, error } = await supabase.from('suppliers').select('*').eq('user_id', user.id);
+    const { data, error } = await supabase.from('suppliers').select('*').eq('user_id', user.id).order('name');
     if (error) toast({ title: "Error fetching suppliers", description: error.message, variant: "destructive" });
     else setSuppliers(data);
   }, [supabase, user, toast]);
@@ -317,13 +413,13 @@ const fetchPurchases = React.useCallback(async () => {
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
-                            <Button variant="outline" className={cn("w-full pl-3 text-left font-normal text-base", !field.value && "text-muted-foreground")}>
+                            <Button variant="outline" className={cn("w-full pl-3 text-left font-normal text-base border-2", !field.value && "text-muted-foreground")}>
                               {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[95vw] max-w-sm p-0" align="start">
+                        <PopoverContent className="w-[95vw] max-w-sm p-0 border-2 border-border shadow-brutal" align="start">
                           <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={d => d > new Date() || d < new Date("1900-01-01")} initialFocus />
                         </PopoverContent>
                       </Popover>
@@ -336,16 +432,18 @@ const fetchPurchases = React.useCallback(async () => {
                     <FormField control={form.control} name="product_id" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm">Product</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || ""}>
-                          <FormControl>
-                            <SelectTrigger className="text-base">
-                              <SelectValue placeholder="Select a product" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {products.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <ComboboxSelect
+                            options={products}
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder="Select a product"
+                            searchPlaceholder="Search products..."
+                            emptyText="No products found"
+                            displayKey="name"
+                            valueKey="id"
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -355,7 +453,7 @@ const fetchPurchases = React.useCallback(async () => {
                         <FormItem>
                           <FormLabel className="text-sm">New Product Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Organic Flour" {...field} className="text-base" />
+                            <Input placeholder="Organic Flour" {...field} className="text-base border-2" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -364,7 +462,7 @@ const fetchPurchases = React.useCallback(async () => {
                         <FormItem>
                           <FormLabel className="text-sm">Selling Price (per unit)</FormLabel>
                           <FormControl>
-                            <Input type="number" placeholder="5.99" {...field} className="text-base" step="0.01" />
+                            <Input type="number" placeholder="5.99" {...field} className="text-base border-2" step="0.01" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -376,16 +474,18 @@ const fetchPurchases = React.useCallback(async () => {
                   <FormField control={form.control} name="supplier_id" render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-sm">Supplier</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
-                        <FormControl>
-                          <SelectTrigger className="text-base">
-                            <SelectValue placeholder="Select a supplier" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <ComboboxSelect
+                          options={suppliers}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Select a supplier"
+                          searchPlaceholder="Search suppliers..."
+                          emptyText="No suppliers found"
+                          displayKey="name"
+                          valueKey="id"
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -396,7 +496,7 @@ const fetchPurchases = React.useCallback(async () => {
                       <FormItem>
                         <FormLabel className="text-sm">Quantity</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="100" {...field} className="text-base" />
+                          <Input type="number" placeholder="100" {...field} className="text-base border-2" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -405,7 +505,7 @@ const fetchPurchases = React.useCallback(async () => {
                       <FormItem>
                         <FormLabel className="text-sm">Total Cost</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="250.00" {...field} className="text-base" step="0.01" />
+                          <Input type="number" placeholder="250.00" {...field} className="text-base border-2" step="0.01" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -489,13 +589,13 @@ const fetchPurchases = React.useCallback(async () => {
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
-                            <Button variant="outline" className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                            <Button variant="outline" className={cn("w-full pl-3 text-left font-normal border-2", !field.value && "text-muted-foreground")}>
                               {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
+                        <PopoverContent className="w-auto p-0 border-2 border-border shadow-brutal" align="start">
                           <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={d => d > new Date() || d < new Date("1900-01-01")} initialFocus />
                         </PopoverContent>
                       </Popover>
@@ -508,14 +608,18 @@ const fetchPurchases = React.useCallback(async () => {
                     <FormField control={form.control} name="product_id" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Product</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || ""}>
-                          <FormControl>
-                            <SelectTrigger><SelectValue placeholder="Select a product" /></SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {products.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <ComboboxSelect
+                            options={products}
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder="Select a product"
+                            searchPlaceholder="Search products..."
+                            emptyText="No products found"
+                            displayKey="name"
+                            valueKey="id"
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -524,14 +628,14 @@ const fetchPurchases = React.useCallback(async () => {
                       <FormField control={form.control} name="product_name" render={({ field }) => (
                         <FormItem>
                           <FormLabel>New Product Name</FormLabel>
-                          <FormControl><Input placeholder="Organic Flour" {...field} /></FormControl>
+                          <FormControl><Input placeholder="Organic Flour" {...field} className="border-2" /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
                       <FormField control={form.control} name="selling_price" render={({ field }) => (
                         <FormItem>
                           <FormLabel>Selling Price (per unit)</FormLabel>
-                          <FormControl><Input type="number" placeholder="5.99" {...field} /></FormControl>
+                          <FormControl><Input type="number" placeholder="5.99" {...field} className="border-2" /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -542,10 +646,18 @@ const fetchPurchases = React.useCallback(async () => {
                   <FormField control={form.control} name="supplier_id" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Supplier</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select a supplier" /></SelectTrigger></FormControl>
-                        <SelectContent>{suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
-                      </Select>
+                      <FormControl>
+                        <ComboboxSelect
+                          options={suppliers}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Select a supplier"
+                          searchPlaceholder="Search suppliers..."
+                          emptyText="No suppliers found"
+                          displayKey="name"
+                          valueKey="id"
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -554,14 +666,14 @@ const fetchPurchases = React.useCallback(async () => {
                   <FormField control={form.control} name="quantity" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Quantity</FormLabel>
-                      <FormControl><Input type="number" placeholder="100" {...field} /></FormControl>
+                      <FormControl><Input type="number" placeholder="100" {...field} className="border-2" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="total_cost" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Total Cost</FormLabel>
-                      <FormControl><Input type="number" placeholder="250.00" {...field} /></FormControl>
+                      <FormControl><Input type="number" placeholder="250.00" {...field} className="border-2" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -616,7 +728,7 @@ const fetchPurchases = React.useCallback(async () => {
 
         {/* Edit Dialog - Mobile Optimized */}
         <Dialog open={!!editingPurchase} onOpenChange={(isOpen) => !isOpen && setEditingPurchase(null)}>
-          <DialogContent className="w-[95vw] max-w-md mx-auto">
+          <DialogContent className="w-[95vw] max-w-md mx-auto border-2 border-border shadow-brutal">
             <DialogHeader>
               <DialogTitle className="text-lg">Edit Purchase</DialogTitle>
               <DialogDescription className="text-sm">Update details. Editing does not affect stock levels.</DialogDescription>
@@ -629,13 +741,13 @@ const fetchPurchases = React.useCallback(async () => {
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
-                          <Button variant="outline" className={cn("w-full pl-3 text-left font-normal text-base", !field.value && "text-muted-foreground")}>
+                          <Button variant="outline" className={cn("w-full pl-3 text-left font-normal text-base border-2", !field.value && "text-muted-foreground")}>
                             {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[90vw] max-w-sm p-0" align="start">
+                      <PopoverContent className="w-[90vw] max-w-sm p-0 border-2 border-border shadow-brutal" align="start">
                         <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={d => d > new Date() || d < new Date("1900-01-01")} initialFocus />
                       </PopoverContent>
                     </Popover>
@@ -646,14 +758,18 @@ const fetchPurchases = React.useCallback(async () => {
                 <FormField control={editForm.control} name="supplier_id" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-sm">Supplier</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
-                      <FormControl>
-                        <SelectTrigger className="text-base">
-                          <SelectValue placeholder="Select a supplier" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>{suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
-                    </Select>
+                    <FormControl>
+                      <ComboboxSelect
+                        options={suppliers}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Select a supplier"
+                        searchPlaceholder="Search suppliers..."
+                        emptyText="No suppliers found"
+                        displayKey="name"
+                        valueKey="id"
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -662,7 +778,7 @@ const fetchPurchases = React.useCallback(async () => {
                   <FormField control={editForm.control} name="quantity" render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-sm">Quantity</FormLabel>
-                      <FormControl><Input type="number" {...field} className="text-base" /></FormControl>
+                      <FormControl><Input type="number" {...field} className="text-base border-2" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -670,7 +786,7 @@ const fetchPurchases = React.useCallback(async () => {
                   <FormField control={editForm.control} name="total_cost" render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-sm">Total Cost</FormLabel>
-                      <FormControl><Input type="number" {...field} className="text-base" step="0.01" /></FormControl>
+                      <FormControl><Input type="number" {...field} className="text-base border-2" step="0.01" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
