@@ -1,11 +1,25 @@
+
 'use client';
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Coffee, Zap, Package, Lightbulb } from "lucide-react";
+import { Coffee, Zap, Package, Lightbulb, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/context/auth-provider";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+
 
 export default function HomePage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace('/dashboard');
+    }
+  }, [user, loading, router]);
+  
   const features = [
     {
       icon: <Coffee className="w-8 h-8" />,
@@ -32,6 +46,15 @@ export default function HomePage() {
       emoji: "🚚"
     }    
   ];
+  
+  if (loading || user) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-muted-foreground">Cargando tu espacio de trabajo...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full bg-background text-foreground">

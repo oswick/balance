@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -44,15 +45,15 @@ function GithubIcon(props: React.SVGProps<SVGSVGElement>) {
 }
 
 export default function LoginPage() {
-  const { supabase, user } = useAuth();
+  const { supabase, user, loading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
+    if (!loading && user) {
       router.replace('/dashboard');
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
   const handleOAuthLogin = async (provider: 'google' | 'github') => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -71,6 +72,15 @@ export default function LoginPage() {
       console.error('Error during login:', error);
     }
   };
+  
+  if (loading || user) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-muted-foreground">Redirigiendo...</p>
+      </div>
+    );
+  }
 
   return (
     <main className="flex min-h-[calc(100vh-56px)] flex-col items-center justify-center bg-background p-4 md:p-24">
