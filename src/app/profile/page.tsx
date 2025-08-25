@@ -21,25 +21,255 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { deleteUserAccount } from "@/lib/actions";
 import { useAuth } from "@/context/auth-provider";
-import { Loader2 } from "lucide-react";
+import { Loader2, Clock, Calendar } from "lucide-react";
 import type { BusinessProfile } from "@/types";
 
 const profileSchema = z.object({
   name: z.string().min(1, "Business name is required.").nullable(),
   business_type: z.string().min(1, "Business type is required.").nullable(),
-  hours: z.string().nullable(),
+  operating_days: z.array(z.string()).optional(),
+  opening_time: z.string().nullable(),
+  closing_time: z.string().nullable(),
   product_types: z.string().nullable(),
 });
+
+const DAYS_OF_WEEK = [
+  { id: "monday", label: "Monday", short: "Mon" },
+  { id: "tuesday", label: "Tuesday", short: "Tue" },
+  { id: "wednesday", label: "Wednesday", short: "Wed" },
+  { id: "thursday", label: "Thursday", short: "Thu" },
+  { id: "friday", label: "Friday", short: "Fri" },
+  { id: "saturday", label: "Saturday", short: "Sat" },
+  { id: "sunday", label: "Sunday", short: "Sun" },
+];
+
+const HOURS = Array.from({ length: 24 }, (_, i) => {
+  const hour = i;
+  const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+  const ampm = hour < 12 ? 'AM' : 'PM';
+  const display = `${hour12}:00 ${ampm}`;
+  const value = `${hour.toString().padStart(2, '0')}:00`;
+  return { value, display };
+});
+
+// Componente para seleccionar días
+const DaySelector = ({ value = [], onChange }: { 
+  value?: string[], 
+  onChange: (days: string[]) => void 
+}) => {
+  const handleDayToggle = (dayId: string, checked: boolean) => {
+    if (checked) {
+      onChange([...value, dayId]);
+    } else {
+      onChange(value.filter(d => d !== dayId));
+    }
+  };
+
+  const selectAll = () => {
+    onChange(DAYS_OF_WEEK.map(day => day.id));
+  };
+
+  const selectWeekdays = () => {
+    onChange(['monday', 'tuesday', 'wednesday', 'thursday', 'friday']);
+  };
+
+  const selectWeekend = () => {
+    onChange(['saturday', 'sunday']);
+  };
+
+  const clearAll = () => {
+    onChange([]);
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Quick select buttons */}
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="outline" size="sm" onClick={selectWeekdays}>
+          Mon-Fri
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={selectWeekend}>
+          Weekend
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={selectAll}>
+          All Days
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={clearAll}>
+          Clear
+        </Button>
+      </div>
+
+      {/* Day checkboxes */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+        {DAYS_OF_WEEK.map((day) => (
+          <div key={day.id} className="flex items-center space-x-2">
+            <Checkbox
+              id={day.id}
+              checked={value.includes(day.id)}
+              onCheckedChange={(checked) => handleDayToggle(day.id, checked as boolean)}
+              className="border-2"
+            />
+            <label
+              htmlFor={day.id}
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            >
+              <span className="hidden sm:inline">{day.label}</span>
+              <span className="sm:hidden">{day.short}</span>
+            </label>
+          </div>
+        ))}
+      </div>
+
+      {/* Selected days preview */}
+      {value.length > 0 && (
+        <div className="mt-3 p-3 bg-accent rounded-md">
+          <p className="text-sm font-medium mb-1">Selected days:</p>
+          <p className="text-sm text-muted-foreground">
+            {value.length === 7 
+              ? "Every day" 
+              : value.length === 5 && !value.includes('saturday') && !value.includes('sunday')
+              ? "Monday to Friday"
+              : value.length === 2 && value.includes('saturday') && value.includes('sunday')
+              ? "Weekends only"
+              : value.map(dayId => DAYS_OF_WEEK.find(d => d.id === dayId)?.short).join(', ')
+            }
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Componente para seleccionar horarios
+const TimeSelector = ({ 
+  openingTime, 
+  closingTime, 
+  onOpeningTimeChange, 
+  onClosingTimeChange 
+}: {
+  openingTime?: string | null,
+  closingTime?: string | null,
+  onOpeningTimeChange: (time: string) => void,
+  onClosingTimeChange: (time: string) => void
+}) => {
+  const setCommonHours = (opening: string, closing: string) => {
+    onOpeningTimeChange(opening);
+    onClosingTimeChange(closing);
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Quick select buttons */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <Button 
+          type="button" 
+          variant="outline" 
+          size="sm" 
+          onClick={() => setCommonHours('09:00', '17:00')}
+        >
+          9AM - 5PM
+        </Button>
+        <Button 
+          type="button" 
+          variant="outline" 
+          size="sm" 
+          onClick={() => setCommonHours('08:00', '18:00')}
+        >
+          8AM - 6PM
+        </Button>
+        <Button 
+          type="button" 
+          variant="outline" 
+          size="sm" 
+          onClick={() => setCommonHours('07:00', '19:00')}
+        >
+          7AM - 7PM
+        </Button>
+        <Button 
+          type="button" 
+          variant="outline" 
+          size="sm" 
+          onClick={() => setCommonHours('00:00', '23:59')}
+        >
+          24/7
+        </Button>
+      </div>
+
+      {/* Time selectors */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Opening Time
+          </label>
+          <Select value={openingTime || ""} onValueChange={onOpeningTimeChange}>
+            <SelectTrigger className="border-2">
+              <SelectValue placeholder="Select opening time" />
+            </SelectTrigger>
+            <SelectContent className="border-2 border-border bg-background shadow-brutal">
+              {HOURS.map((hour) => (
+                <SelectItem key={hour.value} value={hour.value}>
+                  {hour.display}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Closing Time
+          </label>
+          <Select value={closingTime || ""} onValueChange={onClosingTimeChange}>
+            <SelectTrigger className="border-2">
+              <SelectValue placeholder="Select closing time" />
+            </SelectTrigger>
+            <SelectContent className="border-2 border-border bg-background shadow-brutal">
+              {HOURS.map((hour) => (
+                <SelectItem key={hour.value} value={hour.value}>
+                  {hour.display}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Hours preview */}
+      {openingTime && closingTime && (
+        <div className="mt-3 p-3 bg-accent rounded-md">
+          <p className="text-sm font-medium mb-1">Business hours:</p>
+          <p className="text-sm text-muted-foreground">
+            {HOURS.find(h => h.value === openingTime)?.display} - {HOURS.find(h => h.value === closingTime)?.display}
+          </p>
+          {openingTime === '00:00' && closingTime === '23:59' && (
+            <p className="text-xs text-muted-foreground mt-1">Open 24 hours</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function ProfilePage() {
   const { user, supabase } = useAuth();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [profile, setProfile] = useState<BusinessProfile | null>(null);
+  const [operatingDays, setOperatingDays] = useState<string[]>([]);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -48,7 +278,9 @@ export default function ProfilePage() {
     defaultValues: {
       name: "",
       business_type: "",
-      hours: "",
+      operating_days: [],
+      opening_time: "",
+      closing_time: "",
       product_types: "",
     },
   });
@@ -64,10 +296,15 @@ export default function ProfilePage() {
       
       if (data) {
         setProfile(data);
+        const days = data.operating_days ? JSON.parse(data.operating_days) : [];
+        setOperatingDays(days);
+        
         form.reset({
           name: data.name || "",
           business_type: data.business_type || "",
-          hours: data.hours || "",
+          operating_days: days,
+          opening_time: data.opening_time || "",
+          closing_time: data.closing_time || "",
           product_types: data.product_types || "",
         });
       }
@@ -83,7 +320,12 @@ export default function ProfilePage() {
       .from("business_profiles")
       .upsert({
         user_id: user.id,
-        ...values,
+        name: values.name,
+        business_type: values.business_type,
+        operating_days: JSON.stringify(operatingDays),
+        opening_time: values.opening_time,
+        closing_time: values.closing_time,
+        product_types: values.product_types,
       }, { onConflict: 'user_id' });
       
     setIsSaving(false);
@@ -149,7 +391,12 @@ export default function ProfilePage() {
                       <FormItem>
                         <FormLabel>Business Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., The Daily Grind" {...field} value={field.value || ''} />
+                          <Input 
+                            placeholder="e.g., The Daily Grind" 
+                            {...field} 
+                            value={field.value || ''} 
+                            className="border-2"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -162,39 +409,64 @@ export default function ProfilePage() {
                       <FormItem>
                         <FormLabel>Type of Business</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., Coffee Shop" {...field} value={field.value || ''} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="hours"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Business Hours</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., Mon-Fri 7am-6pm" {...field} value={field.value || ''} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="product_types"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Main Product Types</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., Coffee, Pastries, Sandwiches" {...field} value={field.value || ''} />
+                          <Input 
+                            placeholder="e.g., Coffee Shop" 
+                            {...field} 
+                            value={field.value || ''} 
+                            className="border-2"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
+
+                {/* Operating Days */}
+                <div className="space-y-3">
+                  <FormLabel className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Operating Days
+                  </FormLabel>
+                  <DaySelector 
+                    value={operatingDays} 
+                    onChange={setOperatingDays} 
+                  />
+                </div>
+
+                {/* Business Hours */}
+                <div className="space-y-3">
+                  <FormLabel className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Business Hours
+                  </FormLabel>
+                  <TimeSelector
+                    openingTime={form.watch("opening_time")}
+                    closingTime={form.watch("closing_time")}
+                    onOpeningTimeChange={(time) => form.setValue("opening_time", time)}
+                    onClosingTimeChange={(time) => form.setValue("closing_time", time)}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="product_types"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Main Product Types</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="e.g., Coffee, Pastries, Sandwiches" 
+                          {...field} 
+                          value={field.value || ''} 
+                          className="border-2"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <Button type="submit" disabled={isSaving}>
                   {isSaving ? (
                     <>
@@ -226,7 +498,7 @@ export default function ProfilePage() {
                         ) : "Delete My Account"}
                     </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent>
+                <AlertDialogContent className="border-2 border-border shadow-brutal">
                     <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>

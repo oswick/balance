@@ -60,7 +60,10 @@ export interface BusinessProfile {
   user_id: string;
   name: string | null;
   business_type: string | null;
-  hours: string | null;
+  hours?: string | null; // Deprecated, mantener para compatibilidad
+  operating_days: string | null; // JSON string of array
+  opening_time: string | null; // "HH:MM" format
+  closing_time: string | null; // "HH:MM" format  
   product_types: string | null;
   created_at: string;
 }
