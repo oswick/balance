@@ -1,10 +1,8 @@
-
 'use server';
 
 import type { SmartBuySuggestionInput, SmartBuySuggestionOutput } from '@/ai/flows/smart-buy-suggestion';
 import { createServerClient } from './supabase/server';
 import { cookies } from 'next/headers';
-import { createClient } from '@supabase/supabase-js';
 
 export async function getSmartBuySuggestion(input: SmartBuySuggestionInput): Promise<SmartBuySuggestionOutput> {
     try {
@@ -18,7 +16,6 @@ export async function getSmartBuySuggestion(input: SmartBuySuggestionInput): Pro
     }
 }
 
-
 export async function deleteUserAccount(): Promise<{ success: boolean; error?: string }> {
     const cookieStore = cookies();
     const supabase = createServerClient(cookieStore);
@@ -29,56 +26,75 @@ export async function deleteUserAccount(): Promise<{ success: boolean; error?: s
         return { success: false, error: 'User not authenticated or could not be fetched.' };
     }
 
-    // IMPORTANT: Create a Supabase admin client to delete user data
-    // This requires the SERVICE_ROLE_KEY which should be stored securely in environment variables
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        return { success: false, error: 'Server environment is not configured for this action.' };
-    }
-    
-    const supabaseAdmin = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-    
-    // List of tables with user_id foreign key. 
-    // This order matters if there are dependencies. Start with tables that are "children".
-    const tablesToDeleteFrom = ['sales', 'purchases', 'expenses', 'products', 'suppliers', 'business_profiles'];
+    try {
+        // Usar la función de Supabase en lugar del service role key
+        const { data, error } = await supabase
+            .rpc('delete_user_account');
 
-    // Delete all records associated with the user
-    for (const table of tablesToDeleteFrom) {
-        const { error: deleteError } = await supabaseAdmin
-            .from(table)
-            .delete()
-            .eq('user_id', user.id);
-
-        if (deleteError) {
-            console.error(`Error deleting from ${table}:`, deleteError);
-            return { success: false, error: `Failed to delete data from ${table}.` };
+        if (error) {
+            console.error('Error calling delete_user_account function:', error);
+            return { success: false, error: error.message || 'Failed to delete account.' };
         }
+
+        // La función retorna un JSON con success y error/message
+        if (data && data.success) {
+            return { success: true };
+        } else {
+            return { success: false, error: data?.error || 'Unknown error occurred.' };
+        }
+    } catch (error: any) {
+        console.error('Exception in deleteUserAccount:', error);
+        return { success: false, error: error.message || 'Failed to delete account.' };
+    }
+}
+
+export async function deleteUserDataOnly(): Promise<{ success: boolean; error?: string }> {
+    const cookieStore = cookies();
+    const supabase = createServerClient(cookieStore);
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+        return { success: false, error: 'User not authenticated or could not be fetched.' };
     }
 
-    // After deleting all associated data, delete the user from auth schema
-    const { error: deleteUserError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
-    if (deleteUserError) {
-        console.error('Error deleting user from auth:', deleteUserError);
-        return { success: false, error: 'Failed to delete user account.' };
-    }
+    try {
+        // Usar la función que solo elimina datos, no la cuenta de auth
+        const { data, error } = await supabase
+            .rpc('delete_user_data_only');
 
-    return { success: true };
+        if (error) {
+            console.error('Error calling delete_user_data_only function:', error);
+            return { success: false, error: error.message || 'Failed to delete user data.' };
+        }
+
+        if (data && data.success) {
+            return { success: true };
+        } else {
+            return { success: false, error: data?.error || 'Unknown error occurred.' };
+        }
+    } catch (error: any) {
+        console.error('Exception in deleteUserDataOnly:', error);
+        return { success: false, error: error.message || 'Failed to delete user data.' };
+    }
 }
 
 export async function doesUserExist(email: string): Promise<boolean> {
+    // Esta función requiere el service role key, así que mantenemos el manejo de error
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
         console.error('Server environment is not configured for this action.');
         return false;
     }
+
+    const { createClient } = await import('@supabase/supabase-js');
+    
     const supabaseAdmin = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
     try {
-        const { data, error } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+        const { data, error } = await supabaseAdmin.auth.admin.getUserById(email);
         if (error) {
             if (error.name === 'UserNotFoundError') {
                 return false; // User does not exist
