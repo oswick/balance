@@ -111,3 +111,29 @@ export async function deleteUserAccount(): Promise<{ success: boolean; error?: s
 
     return { success: true };
 }
+
+export async function doesUserExist(email: string): Promise<boolean> {
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.error('Server environment is not configured for this action.');
+        return false;
+    }
+    const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    try {
+        const { data, error } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+        if (error) {
+            if (error.name === 'UserNotFoundError') {
+                return false; // User does not exist
+            }
+            console.error("Error checking if user exists:", error);
+            return false; // Treat errors as user not existing to be safe
+        }
+        return !!data.user;
+    } catch (e) {
+        console.error("Exception in doesUserExist:", e);
+        return false;
+    }
+}

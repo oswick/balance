@@ -2,8 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, Package, Lightbulb, TrendingUp, Coffee, Zap, Heart } from "lucide-react";
-import Image from "next/image";
+import { Coffee, Zap, Package, Lightbulb } from "lucide-react";
 import Link from "next/link";
 
 export default function HomePage() {
@@ -54,9 +53,12 @@ export default function HomePage() {
             Es simple: ventas, gastos, inventario. Sin más rollos.
           </p>
           
-          <div className="mt-8">
-            <Button asChild size="lg" className="text-lg px-8">
-              <Link href="/login">Echar un vistazo</Link>
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button asChild size="lg" className="text-lg px-8 w-full sm:w-auto">
+              <Link href="/signup">Empezar</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="text-lg px-8 w-full sm:w-auto">
+                <Link href="/login">Ya tengo una cuenta</Link>
             </Button>
           </div>
         </div>
@@ -91,9 +93,6 @@ export default function HomePage() {
       </section>
 
 
-      {/* Social Proof / Testimonial */}
-     
-
       {/* CTA Section */}
       <section className="text-center py-16 md:py-20 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4">
@@ -106,7 +105,7 @@ export default function HomePage() {
           </p>
           
           <Button asChild size="lg" variant="secondary" className="text-lg px-8">
-            <Link href="/login">Empezar</Link>
+            <Link href="/signup">Empezar Ahora</Link>
           </Button>
         </div>
       </section>
@@ -122,10 +121,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-const CheckCircle = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-    <polyline points="22 4 12 14.01 9 11.01"/>
-  </svg>
-)

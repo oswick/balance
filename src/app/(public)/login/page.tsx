@@ -6,6 +6,8 @@ import { useAuth } from '@/context/auth-provider';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
+import { doesUserExist } from '@/lib/actions';
+import { useToast } from '@/hooks/use-toast';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -24,6 +26,7 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
 export default function LoginPage() {
   const { supabase, user } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
@@ -32,7 +35,8 @@ export default function LoginPage() {
   }, [user, router]);
 
   const handleGoogleLogin = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
+    // This function will now only log in existing users, not create new ones.
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
@@ -40,6 +44,11 @@ export default function LoginPage() {
     });
 
     if (error) {
+      toast({
+        title: "Login Error",
+        description: error.message,
+        variant: "destructive"
+      });
       console.error('Error during login:', error);
     }
   };
