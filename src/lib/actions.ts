@@ -5,6 +5,7 @@ import type { SmartBuySuggestionInput, SmartBuySuggestionOutput } from '@/ai/flo
 import { createServerClient } from './supabase/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
+import type { BusinessProfile } from '@/types';
 
 export async function getSmartBuySuggestion(input: SmartBuySuggestionInput): Promise<SmartBuySuggestionOutput> {
     try {
@@ -16,6 +17,50 @@ export async function getSmartBuySuggestion(input: SmartBuySuggestionInput): Pro
         console.error("Error getting smart buy suggestion:", error);
         return { suggestion: "Sorry, I couldn't generate a suggestion at this time. Please check your input data or try again later." };
     }
+}
+
+interface SignUpWithBusinessParams {
+    email: string;
+    password: string;
+    businessProfile: Omit<BusinessProfile, 'id' | 'user_id' | 'created_at'>;
+}
+
+export async function signUpWithBusiness(params: SignUpWithBusinessParams): Promise<{ success: boolean; error?: string }> {
+    const cookieStore = cookies();
+    const supabase = createServerClient(cookieStore);
+
+    // 1. Create the user
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: params.email,
+        password: params.password,
+    });
+
+    if (authError || !authData.user) {
+        return { success: false, error: authError?.message || 'Failed to create user.' };
+    }
+
+    const userId = authData.user.id;
+
+    // 2. Create the business profile
+    const { error: profileError } = await supabase
+        .from('business_profiles')
+        .insert({
+            user_id: userId,
+            ...params.businessProfile
+        });
+
+    if (profileError) {
+        // Optional: Attempt to clean up the created user if profile creation fails
+        const supabaseAdmin = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
+        await supabaseAdmin.auth.admin.deleteUser(userId);
+        
+        return { success: false, error: `Failed to create business profile: ${profileError.message}` };
+    }
+
+    return { success: true };
 }
 
 

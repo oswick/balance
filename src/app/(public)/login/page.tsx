@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/context/auth-provider';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import Link from 'next/link';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -62,7 +63,10 @@ export default function LoginPage() {
         </CardContent>
       </Card>
       <p className="mt-4 text-sm text-muted-foreground">
-        By logging in, you agree to our terms and privacy policy.
+        Don't have an account?{' '}
+        <Link href="/signup" className="underline font-semibold hover:text-primary">
+            Sign up
+        </Link>
       </p>
     </main>
   );
