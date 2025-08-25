@@ -80,20 +80,31 @@ export function Header() {
               <div className="hidden md:block">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="outline" size="sm" className="font-bold uppercase border-2">
                       Más
                       <ChevronDown className="ml-2 h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <Link href="/profile">Profile</Link>
+                  <DropdownMenuContent 
+                    align="end" 
+                    className="w-48 border-2 border-border bg-background shadow-brutal"
+                    sideOffset={8}
+                  >
+                    <DropdownMenuItem asChild className="font-medium">
+                      <Link href="/profile" className="flex items-center w-full">
+                        Profile
+                      </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/settings">Settings</Link>
+                    <DropdownMenuItem asChild className="font-medium">
+                      <Link href="/settings" className="flex items-center w-full">
+                        Settings
+                      </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
+                    <DropdownMenuSeparator className="bg-border" />
+                    <DropdownMenuItem 
+                      onClick={handleLogout}
+                      className="font-medium text-destructive focus:text-destructive-foreground focus:bg-destructive"
+                    >
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Logout</span>
                     </DropdownMenuItem>
@@ -119,7 +130,7 @@ export function Header() {
 
       {/* Mobile Menu Dropdown (Authenticated) */}
       {user && isMobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-background border-b-2 border-border shadow-lg">
+        <div className="md:hidden absolute top-full left-0 right-0 bg-background border-b-2 border-border shadow-brutal">
           <div className="flex flex-col gap-2 p-4">
             {navItems.map((item) => (
               <Link
@@ -127,26 +138,38 @@ export function Header() {
                 href={item.href}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={cn(
-                  "block rounded-md p-3 text-base font-medium transition-colors",
+                  "block rounded-md p-3 text-base font-medium transition-colors border-2 border-transparent",
                   pathname === item.href
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    ? "bg-accent text-accent-foreground border-border"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground hover:border-border"
                 )}
               >
                 {item.label}
               </Link>
             ))}
-            <div className="border-t border-border mt-2 pt-2">
-                <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="block rounded-md p-3 text-base font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground">Profile</Link>
-                <Link href="/settings" onClick={() => setIsMobileMenuOpen(false)} className="block rounded-md p-3 text-base font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground">Settings</Link>
+            <div className="border-t-2 border-border mt-2 pt-2">
+                <Link 
+                  href="/profile" 
+                  onClick={() => setIsMobileMenuOpen(false)} 
+                  className="block rounded-md p-3 text-base font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground border-2 border-transparent hover:border-border"
+                >
+                  Profile
+                </Link>
+                <Link 
+                  href="/settings" 
+                  onClick={() => setIsMobileMenuOpen(false)} 
+                  className="block rounded-md p-3 text-base font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground border-2 border-transparent hover:border-border"
+                >
+                  Settings
+                </Link>
             </div>
             <Button
-              variant="outline"
+              variant="destructive"
               onClick={() => {
                 handleLogout();
                 setIsMobileMenuOpen(false);
               }}
-              className="mt-2"
+              className="mt-2 font-bold uppercase border-2"
             >
               <LogOut className="mr-2 h-4 w-4" />
               Logout

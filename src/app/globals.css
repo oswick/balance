@@ -172,6 +172,19 @@ body {
   .text-button-destructive {
     color: white !important;
   }
+
+  /* Sombra brutal para elementos popup */
+  .shadow-brutal {
+    box-shadow: 4px 4px 0px 0px hsl(var(--border));
+  }
+
+  .shadow-brutal-sm {
+    box-shadow: 2px 2px 0px 0px hsl(var(--border));
+  }
+
+  .shadow-brutal-lg {
+    box-shadow: 8px 8px 0px 0px hsl(var(--border));
+  }
 }
 
 /* Prevenir saltos de layout */
