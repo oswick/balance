@@ -3,18 +3,11 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
-  console.log('🔥 Callback route hit:', request.url);
-  
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/'
-
-  console.log('📝 Code received:', code);
-  console.log('📍 Origin:', origin);
-  console.log('➡️ Next URL:', next);
-
+  
   if (code) {
-    const cookieStore = await cookies()
+    const cookieStore = cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -33,19 +26,39 @@ export async function GET(request: Request) {
       }
     )
     
-    console.log('🔄 Exchanging code for session...');
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-    
+    const { data: { session }, error } = await supabase.auth.exchangeCodeForSession(code)
+
     if (error) {
-      console.error('❌ Exchange error:', error);
-    } else {
-      console.log('✅ Session created successfully:', data.user?.email);
-      return NextResponse.redirect(`${origin}${next}`)
+      console.error('Auth callback error:', error)
+      return NextResponse.redirect(`${origin}/login?error=auth_error`)
     }
-  } else {
-    console.log('❌ No code found in URL');
+
+    if (session) {
+      const user = session.user;
+      
+      // Check if a business profile exists for this user
+      const { data: profile, error: profileError } = await supabase
+        .from('business_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (profileError && profileError.code !== 'PGRST116') { // PGRST116 is "No rows found"
+        console.error('Error checking for profile:', profileError);
+        // Redirect to dashboard anyway, user can create profile manually
+        return NextResponse.redirect(`${origin}/dashboard`)
+      }
+
+      // If no profile exists, it's a new user. Redirect to profile setup.
+      if (!profile) {
+        return NextResponse.redirect(`${origin}/profile?new=true`)
+      }
+    }
+    
+    // Existing user or successful profile creation, redirect to dashboard
+    return NextResponse.redirect(`${origin}/dashboard`)
   }
 
-  console.log('🔄 Redirecting to error page');
+  // Redirect to an error page if no code is provided
   return NextResponse.redirect(`${origin}/auth/auth-code-error`)
 }

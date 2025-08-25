@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -36,13 +37,14 @@ export function Header() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/login');
+    setIsMobileMenuOpen(false);
   };
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
   
-  const showLoginButton = !user && !['/', '/login', '/signup'].includes(pathname);
+  const showAuthButtons = !user && !['/', '/login', '/signup'].includes(pathname);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b-2 border-border bg-background/95 backdrop-blur-sm">
@@ -53,7 +55,7 @@ export function Header() {
         </Link>
 
         {/* Center: Navigation (Authenticated) */}
-        {user ? (
+        {user && (
           <nav className="hidden md:flex flex-1 justify-center items-center space-x-2 text-sm font-medium">
             {navItems.map((item) => (
               <Link
@@ -70,9 +72,10 @@ export function Header() {
               </Link>
             ))}
           </nav>
-        ) : (
-          <div className="flex-1"></div>
         )}
+        
+        <div className="flex-1 md:hidden"></div>
+
 
         {/* Right: Actions */}
         <div className="flex items-center space-x-2">
@@ -122,13 +125,12 @@ export function Header() {
                 </Button>
               </div>
             </>
-          ) : (
-            showLoginButton && (
+          ) : showAuthButtons && (
                 <Button asChild variant="default" size="sm">
                     <Link href="/login">Login</Link>
                 </Button>
             )
-          )}
+          }
         </div>
       </div>
 
@@ -169,10 +171,7 @@ export function Header() {
             </div>
             <Button
               variant="destructive"
-              onClick={() => {
-                handleLogout();
-                setIsMobileMenuOpen(false);
-              }}
+              onClick={handleLogout}
               className="mt-2 font-bold uppercase border-2"
             >
               <LogOut className="mr-2 h-4 w-4" />
