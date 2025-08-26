@@ -35,7 +35,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { deleteUserAccount } from "@/lib/actions";
 import { useAuth } from "@/context/auth-provider";
-import { Loader2, Clock, Calendar, PartyPopper } from "lucide-react";
+import { Loader2, Clock, Calendar, PartyPopper, Mail } from "lucide-react";
 import type { BusinessProfile } from "@/types";
 
 const profileSchema = z.object({
@@ -393,6 +393,17 @@ export function ProfileForm() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {user?.email && (
+            <div className="p-4 mb-6 border-2 border-border bg-accent rounded-md">
+              <div className="flex items-center gap-3">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Account Email</p>
+                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                </div>
+              </div>
+            </div>
+          )}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleProfileUpdate)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -540,5 +551,5 @@ export function ProfileForm() {
           </AlertDialog>
       </div>
     </div>
-  );
-}
+  
+    
