@@ -551,5 +551,5 @@ export function ProfileForm() {
           </AlertDialog>
       </div>
     </div>
-  
-    
+  );
+}
