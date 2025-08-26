@@ -238,3 +238,45 @@ header {
     transform: translateY(0);
   }
 }
+
+/* Agregar este CSS a tu globals.css o como un componente de estilo */
+
+/* Fix para centrar correctamente los Dialog modals */
+[data-radix-dialog-content] {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 50 !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+}
+
+/* Alternative approach - Ensure the DialogContent is properly centered */
+.dialog-content-centered {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+  z-index: 9999 !important;
+}
+
+/* Ensure overlay is full screen */
+[data-radix-dialog-overlay] {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 50 !important;
+}
+
+/* Mobile specific fixes */
+@media (max-width: 640px) {
+  [data-radix-dialog-content] {
+    width: 95vw !important;
+    max-width: none !important;
+    margin: 1rem !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+  }
+}
