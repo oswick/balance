@@ -82,7 +82,7 @@ export function ResponsiveDatePicker({
         </Button>
 
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent className="w-[95vw] max-w-sm mx-auto border-2 border-border shadow-brutal">
+          <DialogContent className="w-[95vw] max-w-sm border-2 border-border shadow-brutal fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] z-50">
             <DialogHeader>
               <DialogTitle>Select Date</DialogTitle>
             </DialogHeader>

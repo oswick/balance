@@ -163,7 +163,16 @@ export function ProductDuplicateModal({
         )}
       </DialogTrigger>
       
-      <DialogContent className="w-[95vw] max-w-md mx-auto border-2 border-border shadow-brutal max-h-[90vh] overflow-y-auto">
+      <DialogContent 
+        className="w-[95vw] max-w-md border-2 border-border shadow-brutal max-h-[90vh] overflow-y-auto"
+        style={{
+          position: 'fixed',
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+          margin: 0
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Copy className="h-5 w-5" />
