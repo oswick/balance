@@ -203,7 +203,7 @@ export function QuickAddProductModal({
         </Button>
       </DialogTrigger>
       
-      <DialogContent className="w-[95vw] max-w-lg mx-auto border-2 border-border shadow-brutal">
+      <DialogContent className="w-[95vw] max-w-lg mx-auto border-2 border-border shadow-brutal max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5" />
@@ -228,22 +228,24 @@ export function QuickAddProductModal({
             </div>
 
             {/* Plantillas */}
-            <div className="space-y-2 max-h-60 overflow-y-auto">
+            <div className="space-y-2 max-h-[50vh] md:max-h-60 overflow-y-auto">
               {templates.map((template, index) => (
                 <button
                   key={index}
                   onClick={() => useTemplate(template)}
-                  className="w-full text-left p-3 border-2 border-border hover:bg-accent rounded-md transition-colors"
+                  className="w-full text-left p-3 border-2 border-border hover:bg-accent rounded-md transition-colors touch-manipulation"
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-medium">{template.name}</p>
-                      <p className="text-sm text-muted-foreground">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm sm:text-base">{template.name}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         Cantidad: {template.quantity}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm">Venta: ${template.selling_price.toFixed(2)}</p>
+                    <div className="text-left sm:text-right flex-shrink-0">
+                      <p className="text-xs sm:text-sm font-medium">
+                        Venta: ${template.selling_price.toFixed(2)}
+                      </p>
                       <p className="text-xs text-muted-foreground">
                         Compra: ${template.purchase_price.toFixed(2)}
                       </p>
@@ -258,7 +260,7 @@ export function QuickAddProductModal({
               <Button
                 variant="outline"
                 onClick={() => setMode('manual')}
-                className="flex-1"
+                className="flex-1 h-12 touch-manipulation"
               >
                 <PlusCircle className="h-4 w-4 mr-2" />
                 Ingreso Manual
@@ -297,13 +299,13 @@ export function QuickAddProductModal({
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
                   name="purchase_price"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Precio Compra</FormLabel>
+                      <FormLabel className="text-sm">Precio Compra</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -311,7 +313,7 @@ export function QuickAddProductModal({
                           type="number"
                           step="0.01"
                           placeholder="0.00"
-                          className="text-base border-2"
+                          className="text-base border-2 h-12 touch-manipulation"
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
@@ -330,7 +332,7 @@ export function QuickAddProductModal({
                   name="selling_price"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Precio Venta</FormLabel>
+                      <FormLabel className="text-sm">Precio Venta</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -338,7 +340,7 @@ export function QuickAddProductModal({
                           type="number"
                           step="0.01"
                           placeholder="0.00"
-                          className="text-base border-2"
+                          className="text-base border-2 h-12 touch-manipulation"
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
@@ -380,35 +382,35 @@ export function QuickAddProductModal({
               />
 
               {/* Opción de agregar otro */}
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 p-3 bg-muted/50 rounded-md touch-manipulation">
                 <input
                   type="checkbox"
                   id="addAnother"
                   checked={addAnother}
                   onChange={(e) => setAddAnother(e.target.checked)}
-                  className="h-4 w-4"
+                  className="h-4 w-4 touch-manipulation"
                 />
-                <label htmlFor="addAnother" className="text-sm">
+                <label htmlFor="addAnother" className="text-sm cursor-pointer">
                   Agregar otro producto después
                 </label>
               </div>
 
-              <div className="flex gap-2 pt-4">
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setMode('template')}
-                  className="flex-1"
+                  className="flex-1 h-12 touch-manipulation"
                 >
                   ← Plantillas
                 </Button>
-                <Button type="submit" className="flex-1">
+                <Button type="submit" className="flex-1 h-12 touch-manipulation">
                   {addAnother ? 'Guardar + Nuevo' : 'Guardar'}
                 </Button>
               </div>
 
-              <div className="text-xs text-muted-foreground text-center">
-                <Badge variant="outline">Ctrl + Enter</Badge> para guardar rápido
+              <div className="text-xs text-muted-foreground text-center mt-2">
+                <Badge variant="outline" className="text-xs">Ctrl + Enter</Badge> para guardar rápido
               </div>
             </form>
           </Form>

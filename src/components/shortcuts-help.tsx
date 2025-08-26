@@ -160,13 +160,13 @@ export function ShortcutsHelp({ page }: ShortcutsHelpProps) {
   }, {} as Record<string, Shortcut[]>);
 
   const KeyBadge = ({ keys }: { keys: string[] }) => (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1 flex-shrink-0">
       {keys.map((key, index) => (
         <span key={index} className="flex items-center">
-          <Badge variant="outline" className="font-mono text-xs px-2 py-0.5">
+          <Badge variant="outline" className="font-mono text-xs px-2 py-0.5 touch-manipulation">
             {key}
           </Badge>
-          {index < keys.length - 1 && <span className="mx-1 text-muted-foreground">+</span>}
+          {index < keys.length - 1 && <span className="mx-1 text-muted-foreground text-xs">+</span>}
         </span>
       ))}
     </div>
@@ -176,20 +176,20 @@ export function ShortcutsHelp({ page }: ShortcutsHelpProps) {
     <>
       {/* Floating hint */}
       {showFloatingHint && (
-        <div className="fixed bottom-4 right-4 z-50 animate-in slide-in-from-bottom-2">
+        <div className="fixed bottom-4 right-4 z-50 animate-in slide-in-from-bottom-2 max-w-[calc(100vw-2rem)]">
           <Card className="border-2 border-primary/20 bg-primary/5 shadow-brutal-sm">
             <CardContent className="p-3 flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-md">
+              <div className="p-2 bg-primary/10 rounded-md flex-shrink-0">
                 <Keyboard className="h-4 w-4 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">Keyboard shortcuts available</p>
-                <p className="text-xs text-muted-foreground">Press ? for help</p>
+                <p className="text-xs text-muted-foreground hidden sm:block">Press ? for help</p>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 shrink-0"
+                className="h-6 w-6 shrink-0 touch-manipulation"
                 onClick={() => setShowFloatingHint(false)}
               >
                 <X className="h-3 w-3" />
@@ -201,7 +201,7 @@ export function ShortcutsHelp({ page }: ShortcutsHelpProps) {
 
       {/* Help Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto border-2 border-border shadow-brutal">
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto border-2 border-border shadow-brutal">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Keyboard className="h-5 w-5" />
@@ -224,8 +224,8 @@ export function ShortcutsHelp({ page }: ShortcutsHelpProps) {
                 </h3>
                 <div className="space-y-3">
                   {shortcuts.map((shortcut, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
-                      <span className="text-sm">{shortcut.description}</span>
+                    <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-muted/50 rounded-md gap-2">
+                      <span className="text-sm flex-1">{shortcut.description}</span>
                       <KeyBadge keys={shortcut.keys} />
                     </div>
                   ))}

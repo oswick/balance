@@ -163,7 +163,7 @@ export function ProductDuplicateModal({
         )}
       </DialogTrigger>
       
-      <DialogContent className="w-[95vw] max-w-md mx-auto border-2 border-border shadow-brutal">
+      <DialogContent className="w-[95vw] max-w-md mx-auto border-2 border-border shadow-brutal max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Copy className="h-5 w-5" />
@@ -202,7 +202,7 @@ export function ProductDuplicateModal({
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="h-6 text-xs"
+                        className="h-8 text-xs touch-manipulation px-2 py-1"
                         onClick={() => form.setValue('name', suggestion)}
                       >
                         {suggestion}
@@ -216,20 +216,20 @@ export function ProductDuplicateModal({
             />
 
             {/* Precios en grid */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <FormField
                 control={form.control}
                 name="purchase_price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Precio Compra</FormLabel>
+                    <FormLabel className="text-sm">Precio Compra</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         name="purchase_price"
                         type="number"
                         step="0.01"
-                        className="text-base border-2"
+                        className="text-base border-2 h-12 touch-manipulation"
                         onKeyDown={(e) => handleKeyDown(e, 'selling_price')}
                       />
                     </FormControl>
@@ -243,14 +243,14 @@ export function ProductDuplicateModal({
                 name="selling_price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Precio Venta</FormLabel>
+                    <FormLabel className="text-sm">Precio Venta</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         name="selling_price"
                         type="number"
                         step="0.01"
-                        className="text-base border-2"
+                        className="text-base border-2 h-12 touch-manipulation"
                         onKeyDown={(e) => handleKeyDown(e, 'quantity')}
                       />
                     </FormControl>
@@ -303,18 +303,18 @@ export function ProductDuplicateModal({
             </div>
 
             {/* Botones de acción */}
-            <div className="flex gap-2 pt-4">
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setOpen(false)}
-                className="flex-1"
+                className="flex-1 h-12 touch-manipulation"
               >
                 Cancelar
               </Button>
               <Button 
                 type="submit" 
-                className="flex-1"
+                className="flex-1 h-12 touch-manipulation"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
@@ -331,8 +331,8 @@ export function ProductDuplicateModal({
               </Button>
             </div>
 
-            <div className="text-xs text-muted-foreground text-center">
-              <Badge variant="outline">Enter</Badge> navegar • <Badge variant="outline">Ctrl + Enter</Badge> crear
+            <div className="text-xs text-muted-foreground text-center mt-2">
+              <Badge variant="outline" className="text-xs">Enter</Badge> navegar • <Badge variant="outline" className="text-xs">Ctrl + Enter</Badge> crear
             </div>
           </form>
         </Form>
